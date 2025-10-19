@@ -1,8 +1,15 @@
 <?php
-$host = "MySQL-8.0";
-$user = "root";
-$pass = "";
-$dbname = "web_app_db";
+require_once './vendor/autoload.php';
+
+use Dotenv\Dotenv;
+
+$dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
+
+$host = $_ENV['DB_HOST'] ?? 'localhost';
+$user = $_ENV['DB_USER'] ?? 'root';
+$pass = $_ENV['DB_PASS'] ?? '';
+$dbname = $_ENV['DB_NAME'] ?? '';
 
 $mysqli = new mysqli($host, $user, $pass, $dbname);
 
