@@ -6,7 +6,6 @@ class UserController extends BaseController
 {
     protected $userModel;
 
-
     public function __construct($mysqli, $jwtService)
     {
         $this->userModel = new UserModel($mysqli, $jwtService);
@@ -34,7 +33,8 @@ class UserController extends BaseController
         }
     }
 
-    public function login(){
+    public function login()
+    {
         $input = json_decode(file_get_contents('php://input'), true);
 
         if (!$input || empty($input['login']) || empty($input['password'])) {
@@ -43,7 +43,7 @@ class UserController extends BaseController
 
         $userId = $this->userModel->existsUser($input);
 
-        if($userId === null){
+        if ($userId === null) {
             $this->sendBadRequest('Неверный логин или пароль');
         }
 

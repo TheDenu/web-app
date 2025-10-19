@@ -1,6 +1,5 @@
 <?php
 require_once './vendor/autoload.php';
-require_once './vendor/autoload.php';
 
 use Dotenv\Dotenv;
 use Firebase\JWT\JWT;
@@ -17,7 +16,7 @@ class JwtService
 
     public function __construct()
     {
-        $this->secretKey = getenv('JWT_SECRET');
+        $this->secretKey = $_ENV['JWT_SECRET'];
     }
 
     public function generateToken(array $data, int $expireInSeconds = 3600): string
