@@ -13,6 +13,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 $jwtService = new JwtService();
 $userController = new UserController($mysqli, $jwtService);
 $applicationController = new ApplicationController($mysqli);
+$authService = new AuthService($jwtService);
 
 if ($uri === '/api/registration' && $method === 'POST') {
     $userController->registration();
@@ -20,7 +21,7 @@ if ($uri === '/api/registration' && $method === 'POST') {
 if ($uri === '/api/login' && $method === 'POST'){
     $userController->login();
 }
-if($uri === 'api/application/create' && $method === 'POST'){
-    //$authService->checkAuth();
+if($uri === '/api/application/create' && $method === 'POST'){
+    $authService->checkAuth();
     $applicationController->createApplication();
 }
