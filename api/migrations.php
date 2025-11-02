@@ -1,5 +1,5 @@
 <?php
-require_once 'config.php';
+require_once './Service/DBConnect.php';
 
 // Создание таблицы ролей
 $sql_roles = "
@@ -37,6 +37,14 @@ CREATE TABLE IF NOT EXISTS priorities (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ";
 
+// Создание таблицы приоритетов
+$sql_statuses = "
+CREATE TABLE IF NOT EXISTS statuses (
+    id_status INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+";
+
 // Создание таблицы заявок
 $sql_applications = "
 CREATE TABLE IF NOT EXISTS applications (
@@ -49,9 +57,10 @@ CREATE TABLE IF NOT EXISTS applications (
     photo VARCHAR(255),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     solved_at DATETIME DEFAULT NULL,
-    status VARCHAR(50),
+    status_id INT,
     FOREIGN KEY (defect_type_id) REFERENCES defect_types(id_defect_type) ON DELETE SET NULL,
-    FOREIGN KEY (priority_id) REFERENCES priorities(id_priority) ON DELETE SET NULL
+    FOREIGN KEY (priority_id) REFERENCES priorities(id_priority) ON DELETE SET NULL,
+    FOREIGN KEY (status_id) REFERENCES statuses(id_status) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ";
 
@@ -72,6 +81,7 @@ $queries = [
     $sql_users,
     $sql_defect_types,
     $sql_priorities,
+    $sql_statuses,
     $sql_applications,
     $sql_user_tokens,
 ];

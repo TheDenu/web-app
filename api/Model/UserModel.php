@@ -38,20 +38,26 @@ class UserModel
         $login = $this->mysqli->real_escape_string($data['login']);
         $inputPassword = $data['password'];
 
-        $query = "SELECT id_user, password FROM users WHERE login = '$login' limit 1";
+        $query = "SELECT users.id_user, users.password, roles.role_name FROM users JOIN roles on users.role_id = roles.id_role WHERE users.login = '$login' limit 1";
         $result = $this->mysqli->query($query);
         if ($result && $result->num_rows === 1) {
             $row = $result->fetch_assoc();
             $hashedPassword = $row['password'];
             if (password_verify($inputPassword, $hashedPassword)) {
-                return (int)$row['id_user'];
+                return [
+                    'id_user' => (int)$row['id_user'],
+                    'role' => $row['role_name'],
+                ];
             }
         }
         return null;
     }
 
-    public function createToken(int $userId)
+    public function createToken($user)
     {
+        $userId = $user['id_user'];
+        $userRole = $user['role'];
+
         $stmt = $this->mysqli->prepare("SELECT token FROM user_tokens WHERE user_id = ? LIMIT 1");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
@@ -69,7 +75,7 @@ class UserModel
             }
         }
 
-        $token = $this->jwtService->generateToken(['userId' => $userId]);
+        $token = $this->jwtService->generateToken(['userId' => $userId, 'role' => $userRole]);
         date_default_timezone_set('Europe/Moscow');
         $expiresAt = date('Y-m-d H:i:s', time() + 3600);
         $createdAt = date('Y-m-d H:i:s', time());
