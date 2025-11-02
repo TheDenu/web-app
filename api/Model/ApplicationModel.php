@@ -98,26 +98,37 @@ class ApplicationModel
         return null;
     }
 
+    public function getAllApplications() {
+        $sql = "SELECT a.id_application, a.floor, a.room, dt.name AS defect_type, p.name AS priority, a.description, a.photo, s.name AS status, a.created_at, a.solved_at
+            FROM applications a
+            LEFT JOIN defect_types dt ON a.defect_type_id = dt.id_defect_type
+            LEFT JOIN priorities p ON a.priority_id = p.id_priority
+            LEFT JOIN statuses s ON a.status_id = s.id_status
+            ORDER BY a.created_at DESC";
+        $result = $this->mysqli->query($sql);
+        $applications = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $applications[] = $row;
+            }
+            $result->free();
+        }
+        return $applications;
+    }
+
     public function createApplication(array $data)
     {
-        try {
-            $floor = $data['floor'];
-            $room = $data['room'];
-            $defectTypeId = $this->getDefectTypesID($data['defect_type']);
-            $priorityId = $this->getPrioritiesID($data['priority']);
-            $description = $data['description'];
-            $photo = $data['path'];
-            $statusId = $this->getStatusesID("в ожидании");
+        $floor = $data['floor'];
+        $room = $data['room'];
+        $defectTypeId = $this->getDefectTypesID($data['defect_type']);
+        $priorityId = $this->getPrioritiesID($data['priority']);
+        $description = $data['description'];
+        $photo = $data['path'];
+        $statusId = $this->getStatusesID("в ожидании");
 
-            $stmt = $this->mysqli->prepare("INSERT INTO applications (floor, room, defect_type_id, priority_id, description, photo, status_id) VALUES (?,?,?,?,?,?,?)");
-            $stmt->bind_param("ssiissi", $floor, $room, $defectTypeId, $priorityId, $description, $photo, $statusId);
-            $result = $stmt->execute();
-            $stmt->close();
-
-            return $result;
-        } catch (mysqli_sql_exception $ex) {
-            error_log("Ошибка при выполнении запроса: " . $ex->getMessage());
-            return false;
-        }
+        $stmt = $this->mysqli->prepare("INSERT INTO applications (floor, room, defect_type_id, priority_id, description, photo, status_id) VALUES (?,?,?,?,?,?,?)");
+        $stmt->bind_param("ssiissi", $floor, $room, $defectTypeId, $priorityId, $description, $photo, $statusId);
+        $result = $stmt->execute();
+        $stmt->close();
     }
 }

@@ -25,3 +25,7 @@ if($uri === '/api/application/create' && $method === 'POST'){
     $authService->checkAuth();
     $applicationController->createApplication();
 }
+if ($uri === '/api/application/list' && $method === 'GET') {
+    $authService->checkAuth();
+    $applicationController->listApplications();
+}
