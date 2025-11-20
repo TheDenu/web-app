@@ -11,9 +11,10 @@ $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
 
 $jwtService = new JwtService();
+$userModel = new UserModel($mysqli, $jwtService);
 $userController = new UserController($mysqli, $jwtService);
 $applicationController = new ApplicationController($mysqli);
-$authService = new AuthService($jwtService);
+$authService = new AuthService($jwtService, $userModel);
 
 if ($uri === '/api/registration' && $method === 'POST') {
     $userController->registration();
@@ -26,6 +27,6 @@ if($uri === '/api/application/create' && $method === 'POST'){
     $applicationController->createApplication();
 }
 if ($uri === '/api/application/list' && $method === 'GET') {
-    $authService->checkAuth();
+    $authService->checkAdmin();
     $applicationController->listApplications();
 }

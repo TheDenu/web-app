@@ -13,6 +13,23 @@ class UserModel
         $this->jwtService = $jwtService;
     }
 
+    public function getUserRoleById(int $userId): ?string
+    {
+        $stmt = $this->mysqli->prepare("
+            SELECT roles.role_name 
+            FROM users 
+            JOIN roles on roles.id_role = users.role_id 
+            WHERE id = ?
+        ");
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            return $row['role_name'];
+        }
+        return null;
+    }
+
     public function existsByLogin(string $login): bool
     {
         $loginEscaped = $this->mysqli->real_escape_string($login);
