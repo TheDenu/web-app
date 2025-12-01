@@ -19,7 +19,7 @@ class BaseController
         $this->sendResponse($data, 201);
     }
 
-    protected function sendNoContent($data)
+    protected function sendNoContent()
     {
         http_response_code(204);
         exit();

@@ -17,16 +17,15 @@ class UserController extends BaseController
 
         if (!$input || empty($input['login']) || empty($input['password']) || empty($input['fio'])) {
             $this->sendBadRequest('Неверные данные');
-            exit();
+            return;
         }
 
         if ($this->userModel->existsByLogin($input['login'])) {
             $this->sendBadRequest('Пользователь с таким логином уже существует');
-            exit();
+            return;
         }
 
-        $passwordHash = password_hash($input['password'], PASSWORD_BCRYPT);
-        $input['password'] = $passwordHash;
+        $input['password'] = password_hash($input['password'], PASSWORD_BCRYPT);
 
         if ($this->userModel->createUser($input)) {
             $this->sendCreate(['msg' => 'Пользователь успешно зарегистрирован']);
@@ -41,18 +40,24 @@ class UserController extends BaseController
 
         if (!$input || empty($input['login']) || empty($input['password'])) {
             $this->sendBadRequest('Неверные данные');
-            exit();
+            return;
         }
 
         $user = $this->userModel->existsUser($input);
 
         if ($user === null) {
-            $this->sendBadRequest('Неверный логин или пароль');
-            exit();
+            $this->sendUnauthorized('Неверный логин или пароль');
+            return;
         }
 
         $token = $this->userModel->createToken($user);
 
-        echo json_encode(['token' => $token]);
+        $this->sendCreate([
+            'token' => $token,
+            'user' => [
+                'id' => $user['id_user'],
+                'role' => $user['role']
+            ]
+        ]);
     }
 }

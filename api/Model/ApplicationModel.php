@@ -1,134 +1,153 @@
 <?php
-require_once './Service/DBConnect.php';
 
 class ApplicationModel
 {
-
-    protected static $cache = [
-        'defect_types' => null,
-        'priorities' => null,
-        'statuses' => null,
-    ];
-
-    protected $mysqli;
+    private $mysqli;
 
     public function __construct($mysqli)
     {
         $this->mysqli = $mysqli;
     }
 
-    public function getDefectTypes()
+    public function getAll()
     {
-        if (self::$cache['defect_types'] === null) {
-            $result = $this->mysqli->query("SELECT id_defect_type, name FROM defect_types");
-            $types = [];
-            while ($row = $result->fetch_assoc()) {
-                $types[$row['name']] = $row['id_defect_type'];
-            }
-            self::$cache['defect_types'] = $types;
-        }
-        return self::$cache['defect_types'];
-    }
-
-    public function getPriorities()
-    {
-        if (self::$cache['priorities'] === null) {
-            $result = $this->mysqli->query("SELECT id_priority, name FROM priorities");
-            $priorities = [];
-            while ($row = $result->fetch_assoc()) {
-                $priorities[$row['name']] = $row['id_priority'];
-            }
-            self::$cache['priorities'] = $priorities;
-        }
-        return self::$cache['priorities'];
-    }
-
-    public function getStatuses()
-    {
-        if (self::$cache['statuses'] === null) {
-            $result = $this->mysqli->query("SELECT id_status, name FROM statuses");
-            $priorities = [];
-            while ($row = $result->fetch_assoc()) {
-                $priorities[$row['name']] = $row['id_status'];
-            }
-            self::$cache['statuses'] = $priorities;
-        }
-        return self::$cache['statuses'];
-    }
-
-    public function getDefectTypesID(string $userType)
-    {
-        $types = $this->getDefectTypes();
-
-        $userType = mb_strtolower((trim($userType)));
-
-        foreach ($types as $name => $id) {
-            if (mb_strtolower($name) === $userType) {
-                return $id;
-            }
-        }
-        return null;
-    }
-
-    public function getPrioritiesID(string $userPriority)
-    {
-        $priorities = $this->getPriorities();
-
-        $userPriority = mb_strtolower((trim($userPriority)));
-
-        foreach ($priorities as $name => $id) {
-            if (mb_strtolower($name) === $userPriority) {
-                return $id;
-            }
-        }
-        return null;
-    }
-
-    public function getStatusesID(string $userStatus)
-    {
-        $statuses = $this->getStatuses();
-
-        $userStatus = mb_strtolower((trim($userStatus)));
-
-        foreach ($statuses as $name => $id) {
-            if (mb_strtolower($name) === $userStatus) {
-                return $id;
-            }
-        }
-        return null;
-    }
-
-    public function getAllApplications() {
-        $sql = "SELECT a.id_application, a.floor, a.room, dt.name AS defect_type, p.name AS priority, a.description, a.photo, s.name AS status, a.created_at, a.solved_at
+        $result = $this->mysqli->query("
+            SELECT a.*, u.fio as user_fio, p.floor, p.room, p.section,
+                   dt.name as defect_type, pr.name as priority, s.name as status
             FROM applications a
+            LEFT JOIN users u ON a.user_id = u.id_user
+            LEFT JOIN places p ON a.place_id = p.id_place
             LEFT JOIN defect_types dt ON a.defect_type_id = dt.id_defect_type
-            LEFT JOIN priorities p ON a.priority_id = p.id_priority
+            LEFT JOIN priorities pr ON a.priority_id = pr.id_priority
             LEFT JOIN statuses s ON a.status_id = s.id_status
-            ORDER BY a.created_at DESC";
-        $result = $this->mysqli->query($sql);
-        $applications = [];
-        if ($result) {
-            while ($row = $result->fetch_assoc()) {
-                $applications[] = $row;
-            }
-            $result->free();
-        }
-        return $applications;
+            ORDER BY a.created_at DESC
+        ");
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
 
-    public function createApplication(array $data)
+    public function getByUser($user_id)
     {
-        $floor = $data['floor'];
-        $room = $data['room'];
-        $defectTypeId = $this->getDefectTypesID($data['defect_type']);
-        $priorityId = $this->getPrioritiesID($data['priority']);
-        $description = $data['description'];
-        $photo = $data['path'];
-        $statusId = $this->getStatusesID("в ожидании");
+        $stmt = $this->mysqli->prepare("
+            SELECT a.*, p.floor, p.room, p.section,
+                   dt.name as defect_type, pr.name as priority, s.name as status
+            FROM applications a
+            LEFT JOIN places p ON a.place_id = p.id_place
+            LEFT JOIN defect_types dt ON a.defect_type_id = dt.id_defect_type
+            LEFT JOIN priorities pr ON a.priority_id = pr.id_priority
+            LEFT JOIN statuses s ON a.status_id = s.id_status
+            WHERE a.user_id = ?
+            ORDER BY a.created_at DESC
+        ");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
 
-        $stmt = $this->mysqli->prepare("INSERT INTO applications (floor, room, defect_type_id, priority_id, description, photo, status_id) VALUES (?,?,?,?,?,?,?)");
-        $stmt->bind_param("ssiissi", $floor, $room, $defectTypeId, $priorityId, $description, $photo, $statusId);
-        $result = $stmt->execute();
-        $stmt->close();
+
+    public function create($user_id, $data, $files = null)
+    {
+        $this->mysqli->begin_transaction();
+
+        try {
+            $stmt = $this->mysqli->prepare("
+                INSERT INTO applications (user_id, place_id, description, defect_type_id, priority_id, status_id) 
+                VALUES (?, ?, ?, ?, ?, 1)
+            ");
+            $stmt->bind_param(
+                "iisii",
+                $user_id,
+                $data['place_id'],
+                $data['description'],
+                $data['defect_type_id'],
+                $data['priority_id']
+            );
+            if (!$stmt->execute()) {
+                $this->mysqli->rollback();
+            }
+
+            $application_id = $this->mysqli->insert_id;
+
+            if ($files && isset($files['name']) && is_array($files['name'])) {
+                $uploadsDir = __DIR__ . '/../uploads/';
+                if (!is_dir($uploadsDir)) {
+                    mkdir($uploadsDir, 0755, true);
+                }
+
+                $stmtPhoto = $this->mysqli->prepare("
+                    INSERT INTO photos (application_id, path) VALUES (?, ?)
+                ");
+
+                for ($i = 0; $i < count($files['name']); $i++) {
+                    if (
+                        $files['error'][$i] === UPLOAD_ERR_OK &&
+                        is_uploaded_file($files['tmp_name'][$i])
+                    ) {
+
+                        $ext = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
+                        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+                        if (!in_array($ext, $allowed)) {
+                            error_log("Неподдерживаемый формат: " . $files['name'][$i]);
+                            continue;
+                        }
+
+                        $filename = uniqid('app_photo_' . $application_id . '_') . '.' . $ext;
+                        $filePath = $uploadsDir . $filename;
+
+                        if (move_uploaded_file($files['tmp_name'][$i], $filePath)) {
+                            $relativePath = 'uploads/' . $filename;
+                            $stmtPhoto->bind_param("is", $application_id, $relativePath);
+                            $stmtPhoto->execute();
+                        } else {
+                            error_log("Ошибка сохранения файла: " . $files['name'][$i]);
+                        }
+                    }
+                }
+                $stmtPhoto->close();
+            }
+
+            $this->mysqli->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->mysqli->rollback();
+            error_log("Ошибка создания заявки с фото: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function deleteById($application_id, $user_id = null)
+    {
+        $stmt = $this->mysqli->prepare("
+        SELECT status_id FROM applications 
+        WHERE id_application = ? " . ($user_id ? 'AND user_id = ?' : '') . "
+    ");
+
+        if ($user_id) {
+            $stmt->bind_param("ii", $application_id, $user_id);
+        } else {
+            $stmt->bind_param("i", $application_id);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($row = $result->fetch_assoc()) {
+            if ($row['status_id'] == 1) {
+                $stmtDelete = $this->mysqli->prepare("
+                DELETE FROM applications 
+                WHERE id_application = ? " . ($user_id ? 'AND user_id = ?' : '') . "
+            ");
+
+                if ($user_id) {
+                    $stmtDelete->bind_param("ii", $application_id, $user_id);
+                } else {
+                    $stmtDelete->bind_param("i", $application_id);
+                }
+
+                return $stmtDelete->execute();
+            }
+        }
+
+        return false;
     }
 }

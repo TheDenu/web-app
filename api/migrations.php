@@ -21,6 +21,16 @@ CREATE TABLE IF NOT EXISTS users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ";
 
+// Создание таблицы с местами
+$sql_places = "
+CREATE TABLE IF NOT EXISTS places (
+    id_place INT AUTO_INCREMENT PRIMARY KEY,
+    floor INT,
+    room VARCHAR(10),
+    section VARCHAR(30)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+";
+
 // Создание таблицы типов дефектов
 $sql_defect_types = "
 CREATE TABLE IF NOT EXISTS defect_types (
@@ -49,18 +59,29 @@ CREATE TABLE IF NOT EXISTS statuses (
 $sql_applications = "
 CREATE TABLE IF NOT EXISTS applications (
     id_application INT AUTO_INCREMENT PRIMARY KEY,
-    floor VARCHAR(10),
-    room VARCHAR(100),
+    user_id INT,
+    place_id INT,
+    description TEXT,
     defect_type_id INT,
     priority_id INT,
-    description TEXT,
-    photo VARCHAR(255),
+    status_id INT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     solved_at DATETIME DEFAULT NULL,
-    status_id INT,
+    FOREIGN KEY (user_id) REFERENCES users(id_user) ON DELETE SET NULL,
+    FOREIGN KEY (place_id) REFERENCES places(id_place) ON DELETE SET NULL,
     FOREIGN KEY (defect_type_id) REFERENCES defect_types(id_defect_type) ON DELETE SET NULL,
     FOREIGN KEY (priority_id) REFERENCES priorities(id_priority) ON DELETE SET NULL,
     FOREIGN KEY (status_id) REFERENCES statuses(id_status) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+";
+
+// Создание таблицы фотографий
+$sql_photos = "
+CREATE TABLE IF NOT EXISTS photos (
+    id_photo INT AUTO_INCREMENT PRIMARY KEY,
+    application_id INT,
+    path VARCHAR(255),
+    FOREIGN KEY (application_id) REFERENCES applications(id_application) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ";
 
@@ -79,12 +100,16 @@ CREATE TABLE IF NOT EXISTS user_tokens (
 $queries = [
     $sql_roles,
     $sql_users,
+    $sql_places,
     $sql_defect_types,
     $sql_priorities,
     $sql_statuses,
     $sql_applications,
+    $sql_photos,
     $sql_user_tokens,
 ];
+
+$mysqli = getDBConnection();
 
 foreach ($queries as $query) {
     if (!$mysqli->query($query)) {
