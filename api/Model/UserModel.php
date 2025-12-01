@@ -1,6 +1,4 @@
 <?php
-require_once './Service/DBConnect.php';
-require_once './Service/JwtService.php';
 
 class UserModel
 {
@@ -18,12 +16,13 @@ class UserModel
         $stmt = $this->mysqli->prepare("
             SELECT roles.role_name 
             FROM users 
-            JOIN roles on roles.id_role = users.role_id 
-            WHERE id = ?
+            JOIN roles ON roles.id_role = users.role_id 
+            WHERE users.id_user = ?
         ");
         $stmt->bind_param('i', $userId);
         $stmt->execute();
         $result = $stmt->get_result();
+
         if ($row = $result->fetch_assoc()) {
             return $row['role_name'];
         }
@@ -32,35 +31,44 @@ class UserModel
 
     public function existsByLogin(string $login): bool
     {
-        $loginEscaped = $this->mysqli->real_escape_string($login);
-
-        $query = "SELECT id_user FROM users WHERE login = '$loginEscaped' limit 1";
-        $result = $this->mysqli->query($query);
-
-        return $result && $result->num_rows > 0;
+        $stmt = $this->mysqli->prepare("SELECT id_user FROM users WHERE login = ? LIMIT 1");
+        $stmt->bind_param('s', $login);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->num_rows > 0;
     }
 
     public function createUser(array $data): bool
     {
-        $login = $this->mysqli->real_escape_string($data['login']);
-        $password = $this->mysqli->real_escape_string($data['password']);
-        $fio = $this->mysqli->real_escape_string($data['fio']);
+        $stmt = $this->mysqli->prepare("
+            INSERT INTO users (login, password, fio, role_id) 
+            VALUES (?, ?, ?, 1)
+        ");
 
-        $query = "INSERT INTO users (login, password, fio) VALUES ('$login', '$password', '$fio')";
-        return $this->mysqli->query($query);
+        $stmt->bind_param(
+            'sss',
+            $data['login'],
+            $data['password'],
+            $data['fio']
+        );
+
+        return $stmt->execute();
     }
 
     public function existsUser(array $data)
     {
-        $login = $this->mysqli->real_escape_string($data['login']);
-        $inputPassword = $data['password'];
+        $stmt = $this->mysqli->prepare("
+            SELECT users.id_user, users.password, roles.role_name 
+            FROM users 
+            JOIN roles ON users.role_id = roles.id_role 
+            WHERE users.login = ?
+        ");
+        $stmt->bind_param('s', $data['login']);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-        $query = "SELECT users.id_user, users.password, roles.role_name FROM users JOIN roles on users.role_id = roles.id_role WHERE users.login = '$login' limit 1";
-        $result = $this->mysqli->query($query);
-        if ($result && $result->num_rows === 1) {
-            $row = $result->fetch_assoc();
-            $hashedPassword = $row['password'];
-            if (password_verify($inputPassword, $hashedPassword)) {
+        if ($row = $result->fetch_assoc()) {
+            if (password_verify($data['password'], $row['password'])) {
                 return [
                     'id_user' => (int)$row['id_user'],
                     'role' => $row['role_name'],
@@ -73,34 +81,34 @@ class UserModel
     public function createToken($user)
     {
         $userId = $user['id_user'];
-        $userRole = $user['role'];
 
         $stmt = $this->mysqli->prepare("SELECT token FROM user_tokens WHERE user_id = ? LIMIT 1");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
         $result = $stmt->get_result();
 
-        if ($result && $result->num_rows === 1) {
-            $row = $result->fetch_assoc();
+        if ($row = $result->fetch_assoc()) {
             $token = $row['token'];
-
-            $data = $this->jwtService->validateToken($token);
-            if ($data !== null) {
+            $payload = $this->jwtService->validateToken($token);
+            if ($payload !== null) {
                 return $token;
-            } else {
-                $this->mysqli->query("DELETE FROM user_tokens WHERE user_id = $userId");
             }
+
+            $this->mysqli->prepare("DELETE FROM user_tokens WHERE user_id = ?")->execute([$userId]);
         }
 
-        $token = $this->jwtService->generateToken(['userId' => $userId, 'role' => $userRole]);
-        date_default_timezone_set('Europe/Moscow');
-        $expiresAt = date('Y-m-d H:i:s', time() + 3600);
-        $createdAt = date('Y-m-d H:i:s', time());
+        $token = $this->jwtService->generateToken([
+            'userId' => $userId,
+            'role' => $user['role']
+        ]);
 
-        $stmt = $this->mysqli->prepare("INSERT INTO user_tokens (user_id, token, created_at, expires_at) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("isss", $userId, $token, $createdAt, $expiresAt);
+        $expiresAt = date('Y-m-d H:i:s', time() + 3600 * 24);
+        $stmt = $this->mysqli->prepare("
+            INSERT INTO user_tokens (user_id, token, expires_at) 
+            VALUES (?, ?, ?)
+        ");
+        $stmt->bind_param("iss", $userId, $token, $expiresAt);
         $stmt->execute();
-        $stmt->close();
 
         return $token;
     }

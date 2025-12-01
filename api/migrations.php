@@ -109,6 +109,8 @@ $queries = [
     $sql_user_tokens,
 ];
 
+$mysqli = getDBConnection();
+
 foreach ($queries as $query) {
     if (!$mysqli->query($query)) {
         echo "Ошибка миграции: " . $mysqli->error . "\n";
