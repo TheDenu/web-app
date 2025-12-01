@@ -114,4 +114,40 @@ class ApplicationModel
             return false;
         }
     }
+
+    public function deleteById($application_id, $user_id = null)
+    {
+        $stmt = $this->mysqli->prepare("
+        SELECT status_id FROM applications 
+        WHERE id_application = ? " . ($user_id ? 'AND user_id = ?' : '') . "
+    ");
+
+        if ($user_id) {
+            $stmt->bind_param("ii", $application_id, $user_id);
+        } else {
+            $stmt->bind_param("i", $application_id);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($row = $result->fetch_assoc()) {
+            if ($row['status_id'] == 1) {
+                $stmtDelete = $this->mysqli->prepare("
+                DELETE FROM applications 
+                WHERE id_application = ? " . ($user_id ? 'AND user_id = ?' : '') . "
+            ");
+
+                if ($user_id) {
+                    $stmtDelete->bind_param("ii", $application_id, $user_id);
+                } else {
+                    $stmtDelete->bind_param("i", $application_id);
+                }
+
+                return $stmtDelete->execute();
+            }
+        }
+
+        return false;
+    }
 }

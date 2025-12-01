@@ -67,4 +67,27 @@ class ApplicationController extends BaseController
             $this->sendServerError('Ошибка создания заявки');
         }
     }
+
+    public function deleteApplication()
+    {
+        $user_id = $_SERVER['AUTH_USER_ID'] ?? null;
+        if (!$user_id) {
+            $this->sendUnauthorized('Не авторизован');
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $application_id = (int)($input['application_id'] ?? 0);
+
+        if (!$application_id) {
+            $this->sendBadRequest('ID заявки обязателен');
+            return;
+        }
+
+        if ($this->applicationModel->deleteById($application_id, $user_id)) {
+            $this->sendNoContent();
+        } else {
+            $this->sendForbidden('Нельзя удалить: заявка не на модерации или не найдена');
+        }
+    }
 }

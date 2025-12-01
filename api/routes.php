@@ -68,6 +68,14 @@ switch ($uri) {
         }
         break;
 
+    case '/api/application/delete':
+        if ($method === 'DELETE' || ($method === 'POST' && $input['action'] === 'delete')) {
+            $authMiddleware->handle(function () use ($applicationController) {
+                $applicationController->deleteApplication();
+            });
+        }
+        break;
+
     default:
         http_response_code(404);
         echo json_encode(['error' => 'Маршрут не найден']);
