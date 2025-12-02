@@ -39,6 +39,13 @@ switch ($uri) {
         }
         break;
 
+    case $uri === '/api/logout':
+        if ($method === 'POST') {
+            $authMiddleware->handle(function () use ($userController) {
+                $userController->logout();
+            });
+        }
+
     case '/api/application/create':
         if ($method === 'POST') {
             $authMiddleware->handle(function () use ($applicationController) {

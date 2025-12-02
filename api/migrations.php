@@ -9,15 +9,24 @@ CREATE TABLE IF NOT EXISTS roles (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ";
 
+// Создание таблицы имен
+$sql_names = "
+CREATE TABLE IF NOT EXISTS names (
+    id_fio INT AUTO_INCREMENT PRIMARY KEY,
+    fio VARCHAR(255) NOT NULL UNIQUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+";
+
 // Создание таблицы пользователей
 $sql_users = "
 CREATE TABLE IF NOT EXISTS users (
     id_user INT AUTO_INCREMENT PRIMARY KEY,
     login VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    fio VARCHAR(255) NOT NULL,
+    fio_id int NOT NULL,
     role_id INT NOT NULL,
     FOREIGN KEY (role_id) REFERENCES roles(id_role) ON DELETE RESTRICT
+    FOREIGN KEY (fio_id) REFERENCES names(id_fio) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ";
 

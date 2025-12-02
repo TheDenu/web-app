@@ -11,22 +11,14 @@ class UserModel
         $this->jwtService = $jwtService;
     }
 
-    public function getUserRoleById(int $userId): ?string
+    public function getByFio(string $fio)
     {
-        $stmt = $this->mysqli->prepare("
-            SELECT roles.role_name 
-            FROM users 
-            JOIN roles ON roles.id_role = users.role_id 
-            WHERE users.id_user = ?
-        ");
-        $stmt->bind_param('i', $userId);
+        $stmt = $this->mysqli->prepare("SELECT id_fio FROM names WHERE fio = ? LIMIT 1");
+        $stmt->bind_param("s", $fio);
         $stmt->execute();
         $result = $stmt->get_result();
-
-        if ($row = $result->fetch_assoc()) {
-            return $row['role_name'];
-        }
-        return null;
+        $row = $result->fetch_row();
+        return $row ? (int)$row[0] : null;
     }
 
     public function existsByLogin(string $login): bool
@@ -38,19 +30,14 @@ class UserModel
         return $result->num_rows > 0;
     }
 
-    public function createUser(array $data): bool
+
+    public function createUser(int $idFio, string $login, string $hashedPassword, int $roleId = 1): bool
     {
         $stmt = $this->mysqli->prepare("
-            INSERT INTO users (login, password, fio, role_id) 
-            VALUES (?, ?, ?, 1)
+            INSERT INTO users
+            (login, password, fio_id, role_id) VALUES (?, ?, ?, ?)
         ");
-
-        $stmt->bind_param(
-            'sss',
-            $data['login'],
-            $data['password'],
-            $data['fio']
-        );
+        $stmt->bind_param("ssii", $login, $hashedPassword, $idFio, $roleId);
 
         return $stmt->execute();
     }
@@ -111,5 +98,16 @@ class UserModel
         $stmt->execute();
 
         return $token;
+    }
+
+    public function deleteToken(string $token): bool
+    {
+        $stmt = $this->mysqli->prepare("DELETE FROM user_tokens WHERE token = ?");
+        $stmt->bind_param("s", $token);
+
+        if ($stmt->execute()) {
+            return $stmt->affected_rows > 0;
+        }
+        return false;
     }
 }

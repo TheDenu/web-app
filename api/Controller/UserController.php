@@ -20,14 +20,22 @@ class UserController extends BaseController
             return;
         }
 
+        $idFio = $this->userModel->getByFio($input['fio']);
+
+        if ($idFio === null) {
+            $this->sendBadRequest('Пользователь с таким ФИО не найден');
+            return;
+        }
+
         if ($this->userModel->existsByLogin($input['login'])) {
             $this->sendBadRequest('Пользователь с таким логином уже существует');
             return;
         }
 
-        $input['password'] = password_hash($input['password'], PASSWORD_BCRYPT);
+       
+        $passwordHash = password_hash($input['password'], PASSWORD_BCRYPT);
 
-        if ($this->userModel->createUser($input)) {
+        if ($this->userModel->createUser($idFio, $input['login'], $passwordHash, 1)) {
             $this->sendCreate(['msg' => 'Пользователь успешно зарегистрирован']);
         } else {
             $this->sendServerError('Ошибка создания пользователя');
@@ -59,5 +67,18 @@ class UserController extends BaseController
                 'role' => $user['role']
             ]
         ]);
+    }
+
+    public function logout(){
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'];
+
+        $token = substr($authHeader, 7);
+
+        if ($this->userModel->deleteToken($token)) {
+            $this->sendSuccess(['msg' => 'Пользователь успешно вышел из системы']);
+        } else {
+            $this->sendServerError('Ошибка при выходе из системы');
+        }
     }
 }

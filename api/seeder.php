@@ -6,6 +6,12 @@ $sql_roles = "
     VALUES ('user'), ('admin');
 ";
 
+$sql_users = "
+INSERT INTO names (fio) VALUES 
+('Иван Иванов'), ('Петр Петров'), ('Алексей Алексеев'),
+('Дмитрий Дмитриев'), ('Елена Еленова'), ('Марина Маринина'), 
+('Олег Олегов'), ('Наталья Натальева'), ('Егор Егоров')";
+
 $sql_places = "
 INSERT INTO places (floor, room, section) VALUES
 (2, '201', 'male'), (2, '202', 'male'), (2, '203', 'male'), (2, '204', 'male'), (2, '205', 'male'), (2, '206', 'male'), (2, '207', 'male'), (2, '208', 'male'), (2, 'кухня', 'male'), (2, 'коридор', 'male'),
@@ -54,7 +60,7 @@ $mysqli = getDBConnection();
 
 foreach ($queries as $query) {
     if (!$mysqli->query($query)) {
-        echo "Ошибка сидера: " . $mysqli->error . "\n";
+        echo "Ошибка вставки данных: " . $mysqli->error . "\n";
         exit;
     }
 }
