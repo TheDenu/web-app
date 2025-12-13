@@ -20,7 +20,24 @@ class ApplicationController extends BaseController
             $this->sendForbidden('Только для админов');
             return;
         }
-        $this->sendSuccess($this->applicationModel->getAll());
+
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $limit = 20;
+        $offset = ($page - 1) * $limit;
+
+        $result = $this->applicationModel->getAll($limit, $offset);
+        $total = $this->applicationModel->getApplicationsCount();
+
+        $this->sendSuccess([
+            'applications' => $result,
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'pages' => ceil($total / $limit),
+                'offset' => $offset
+            ]
+        ]);
     }
 
     public function getMy()
@@ -31,10 +48,27 @@ class ApplicationController extends BaseController
             return;
         }
 
-        $this->sendSuccess($this->applicationModel->getByUser($user_id));
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $limit = 20;
+        $offset = ($page - 1) * $limit;
+
+        $result = $this->applicationModel->getByUser($user_id, $limit, $offset);
+
+        $total = $this->applicationModel->getUserApplicationsCount($user_id);
+
+        $this->sendSuccess([
+            'applications' => $result,
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'pages' => ceil($total / $limit),
+                'offset' => $offset
+            ]
+        ]);
     }
 
-    public function createApplication()
+    public function createApplication(array $input)
     {
         $user_id = $_SERVER['AUTH_USER_ID'] ?? null;
         if (!$user_id) {
@@ -68,7 +102,7 @@ class ApplicationController extends BaseController
         }
     }
 
-    public function deleteApplication()
+    public function deleteApplication(array $input)
     {
         $user_id = $_SERVER['AUTH_USER_ID'] ?? null;
         if (!$user_id) {
@@ -76,8 +110,7 @@ class ApplicationController extends BaseController
             return;
         }
 
-        $input = json_decode(file_get_contents('php://input'), true);
-        $application_id = (int)($input['application_id'] ?? 0);
+        $application_id = (int)($input['id_application'] ?? 0);
 
         if (!$application_id) {
             $this->sendBadRequest('ID заявки обязателен');
@@ -88,6 +121,29 @@ class ApplicationController extends BaseController
             $this->sendNoContent();
         } else {
             $this->sendForbidden('Нельзя удалить: заявка не на модерации или не найдена');
+        }
+    }
+
+
+    public function updateStatus(array $input)
+    {
+        if (!AuthMiddleware::isAdmin()) {
+            $this->sendForbidden('Только для администраторов');
+            return;
+        }
+
+        $application_id = (int)($input['application_id'] ?? 0);
+        $status_id = (int)($input['status_id'] ?? 0);
+
+        if (!$application_id || !$status_id) {
+            $this->sendBadRequest('ID заявки и статус обязательны');
+            return;
+        }
+
+        if ($this->applicationModel->updateStatus($application_id, $status_id)) {
+            $this->sendSuccess(['message' => 'Статус заявки обновлён']);
+        } else {
+            $this->sendServerError('Ошибка обновления статуса');
         }
     }
 }

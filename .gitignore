@@ -1,0 +1,16 @@
+# Папки с файлами пользователей
+uploads/
+
+# Логи
+*.log
+
+# Секреты
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Системные
+.DS_Store
+Thumbs.db
