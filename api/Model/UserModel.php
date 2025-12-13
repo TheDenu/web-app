@@ -21,6 +21,15 @@ class UserModel
         return $row ? (int)$row[0] : null;
     }
 
+    public function fioExists(int $idFio): bool
+    {
+        $stmt = $this->mysqli->prepare("SELECT id_user FROM users WHERE fio_id = ? LIMIT 1");
+        $stmt->bind_param("i", $idFio);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->num_rows > 0;
+    }
+
     public function existsByLogin(string $login): bool
     {
         $stmt = $this->mysqli->prepare("SELECT id_user FROM users WHERE login = ? LIMIT 1");
@@ -81,7 +90,9 @@ class UserModel
                 return $token;
             }
 
-            $this->mysqli->prepare("DELETE FROM user_tokens WHERE user_id = ?")->execute([$userId]);
+            $stmt = $this->mysqli->prepare("DELETE FROM user_tokens WHERE user_id = ?");
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
         }
 
         $token = $this->jwtService->generateToken([

@@ -4,14 +4,19 @@ class CorsMiddleware
 {
     public function handle()
     {
-        // Разрешить доступ с любого источника (для разработки)
+        header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: DENY');
+        header('X-XSS-Protection: 1; mode=block');
+        header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+        header('Referrer-Policy: strict-origin-when-cross-origin');
+
         header("Access-Control-Allow-Origin: *");
-
-        // Разрешить методы
         header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
-
-        // Разрешить заголовки
         header("Access-Control-Allow-Headers: Authorization, Content-Type, Accept");
+        
+        // В продакшене добавь:
+        //header("Access-Control-Allow-Origin: https://your-frontend-domain.com"); //Адрес клиента
+        //header("Access-Control-Allow-Credentials: true");
 
         // При preflight-запросе OPTIONS просто завершаем
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

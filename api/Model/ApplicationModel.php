@@ -9,40 +9,74 @@ class ApplicationModel
         $this->mysqli = $mysqli;
     }
 
-    public function getAll()
-    {
-        $result = $this->mysqli->query("
-            SELECT a.*, u.fio as user_fio, p.floor, p.room, p.section,
-                   dt.name as defect_type, pr.name as priority, s.name as status
-            FROM applications a
-            LEFT JOIN users u ON a.user_id = u.id_user
-            LEFT JOIN places p ON a.place_id = p.id_place
-            LEFT JOIN defect_types dt ON a.defect_type_id = dt.id_defect_type
-            LEFT JOIN priorities pr ON a.priority_id = pr.id_priority
-            LEFT JOIN statuses s ON a.status_id = s.id_status
-            ORDER BY a.created_at DESC
-        ");
-        return $result->fetch_all(MYSQLI_ASSOC);
-    }
-
-    public function getByUser($user_id)
+    public function getAll(int $limit = 20, int $offset = 0)
     {
         $stmt = $this->mysqli->prepare("
-            SELECT a.*, p.floor, p.room, p.section,
-                   dt.name as defect_type, pr.name as priority, s.name as status
-            FROM applications a
-            LEFT JOIN places p ON a.place_id = p.id_place
-            LEFT JOIN defect_types dt ON a.defect_type_id = dt.id_defect_type
-            LEFT JOIN priorities pr ON a.priority_id = pr.id_priority
-            LEFT JOIN statuses s ON a.status_id = s.id_status
-            WHERE a.user_id = ?
-            ORDER BY a.created_at DESC
-        ");
-        $stmt->bind_param("i", $user_id);
+        SELECT a.*, 
+               n.fio as user_fio,
+               u.login as user_login,
+               p.floor, p.room, p.section,
+               dt.name as defect_type, 
+               pr.name as priority, 
+               s.name as status
+        FROM applications a
+        LEFT JOIN users u ON a.user_id = u.id_user
+        LEFT JOIN names n ON u.fio_id = n.id_fio
+        LEFT JOIN places p ON a.place_id = p.id_place
+        LEFT JOIN defect_types dt ON a.defect_type_id = dt.id_defect_type
+        LEFT JOIN priorities pr ON a.priority_id = pr.id_priority
+        LEFT JOIN statuses s ON a.status_id = s.id_status
+        ORDER BY a.created_at DESC
+        LIMIT ? OFFSET ?
+    ");
+        $stmt->bind_param("ii", $limit, $offset);
         $stmt->execute();
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
+
+    public function getApplicationsCount(): int
+    {
+        $stmt = $this->mysqli->prepare("SELECT COUNT(*) as count FROM applications");
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        return (int)$result['count'];
+    }
+
+    public function getByUser(int $user_id, int $limit = 20, int $offset = 0)
+    {
+        $stmt = $this->mysqli->prepare("
+        SELECT a.*, 
+               n.fio as user_fio,
+               p.floor, p.room, p.section,
+               dt.name as defect_type, 
+               pr.name as priority, 
+               s.name as status
+        FROM applications a
+        LEFT JOIN users u ON a.user_id = u.id_user
+        LEFT JOIN names n ON u.fio_id = n.id_fio
+        LEFT JOIN places p ON a.place_id = p.id_place
+        LEFT JOIN defect_types dt ON a.defect_type_id = dt.id_defect_type
+        LEFT JOIN priorities pr ON a.priority_id = pr.id_priority
+        LEFT JOIN statuses s ON a.status_id = s.id_status
+        WHERE a.user_id = ?
+        ORDER BY a.created_at DESC
+        LIMIT ? OFFSET ?
+    ");
+        $stmt->bind_param("iii", $user_id, $limit, $offset);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+
+    public function getUserApplicationsCount(int $user_id): int
+    {
+        $stmt = $this->mysqli->prepare("SELECT COUNT(*) as count FROM applications WHERE user_id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        return (int)$result['count'];
+    }
 
     public function create($user_id, $data, $files = null)
     {
@@ -118,9 +152,9 @@ class ApplicationModel
     public function deleteById($application_id, $user_id = null)
     {
         $stmt = $this->mysqli->prepare("
-        SELECT status_id FROM applications 
-        WHERE id_application = ? " . ($user_id ? 'AND user_id = ?' : '') . "
-    ");
+            SELECT status_id FROM applications 
+            WHERE id_application = ? " . ($user_id ? 'AND user_id = ?' : '') . "
+        ");
 
         if ($user_id) {
             $stmt->bind_param("ii", $application_id, $user_id);
@@ -149,5 +183,16 @@ class ApplicationModel
         }
 
         return false;
+    }
+
+    public function updateStatus(int $application_id, int $status_id): bool
+    {
+        $stmt = $this->mysqli->prepare("
+        UPDATE applications 
+        SET status_id = ?
+        WHERE id_application = ?
+    ");
+        $stmt->bind_param("ii", $status_id, $application_id);
+        return $stmt->execute();
     }
 }

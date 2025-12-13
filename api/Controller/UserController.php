@@ -1,6 +1,6 @@
 <?php
-require_once 'BaseController.php';
 require_once './Model/UserModel.php';
+require_once 'BaseController.php';
 
 class UserController extends BaseController
 {
@@ -11,19 +11,17 @@ class UserController extends BaseController
         $this->userModel = new UserModel($mysqli, $jwtService);
     }
 
-    public function registration()
+    public function registration(array $input)
     {
-        $input = json_decode(file_get_contents('php://input'), true);
-
-        if (!$input || empty($input['login']) || empty($input['password']) || empty($input['fio'])) {
-            $this->sendBadRequest('Неверные данные');
-            return;
-        }
-
         $idFio = $this->userModel->getByFio($input['fio']);
 
         if ($idFio === null) {
             $this->sendBadRequest('Пользователь с таким ФИО не найден');
+            return;
+        }
+
+        if ($this->userModel->fioExists($idFio)) {
+            $this->sendBadRequest('Аккаунт с таким ФИО уже зарегистрирован');
             return;
         }
 
@@ -32,7 +30,6 @@ class UserController extends BaseController
             return;
         }
 
-       
         $passwordHash = password_hash($input['password'], PASSWORD_BCRYPT);
 
         if ($this->userModel->createUser($idFio, $input['login'], $passwordHash, 1)) {
@@ -42,15 +39,8 @@ class UserController extends BaseController
         }
     }
 
-    public function login()
+    public function login(array $input)
     {
-        $input = json_decode(file_get_contents('php://input'), true);
-
-        if (!$input || empty($input['login']) || empty($input['password'])) {
-            $this->sendBadRequest('Неверные данные');
-            return;
-        }
-
         $user = $this->userModel->existsUser($input);
 
         if ($user === null) {
@@ -69,7 +59,8 @@ class UserController extends BaseController
         ]);
     }
 
-    public function logout(){
+    public function logout()
+    {
         $headers = getallheaders();
         $authHeader = $headers['Authorization'];
 
