@@ -11,6 +11,20 @@ class UserController extends BaseController
         $this->userModel = new UserModel($mysqli, $jwtService);
     }
 
+    public function getMe()
+    {
+        $userId = $_SERVER['AUTH_USER_ID'];
+
+        $user = $this->userModel->getById($userId);
+
+        if ($user === null) {
+            $this->sendBadRequest('Пользователь не найден');
+            return;
+        }
+
+        $user['role'] = $user['role_id'] == 2 ? 'admin' : 'user';
+        $this->sendSuccess($user);
+    }
     public function registration(array $input)
     {
         $idFio = $this->userModel->getByFio($input['fio']);

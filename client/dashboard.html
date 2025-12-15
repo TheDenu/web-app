@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Мои заявки</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link
+			href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+			rel="stylesheet"
+		/>
+		<link rel="stylesheet" href="/assets/css/common.css" />
+		<link rel="stylesheet" href="/assets/css/dashboard.css" />
+	</head>
+	<body>
+		<div class="dashboardPage">
+			<!-- Сайдбар -->
+			<aside class="sidebar">
+				<div class="sidebarHeader">
+					<div class="logo">
+						<i class="bi bi-door-open"></i>
+					</div>
+					<div class="userInfo">
+						<div id="userName" class="userName">Загрузка...</div>
+						<div id="userRole" class="userRole">user</div>
+					</div>
+				</div>
+				<nav class="sidebarNav">
+					<a href="#" data-view="my" class="navItem active">
+						<i class="bi bi-list-ul"></i>
+						<span>Мои заявки</span>
+					</a>
+					<a
+						href="#"
+						data-view="all"
+						class="navItem"
+						style="display: none"
+						id="adminNav"
+					>
+						<i class="bi bi-people"></i>
+						<span>Все заявки</span>
+					</a>
+					<a href="#" data-view="new" class="navItem">
+						<i class="bi bi-plus-circle"></i>
+						<span>Новая заявка</span>
+					</a>
+				</nav>
+			</aside>
+
+			<!-- Основной контент -->
+			<main class="mainContent">
+				<!-- Хедер с поиском -->
+				<header class="pageHeader">
+					<div class="headerLeft">
+						<button class="mobileMenuBtn" id="mobileMenuBtn">
+							<i class="bi bi-list"></i>
+						</button>
+						<h1 id="pageTitle">Мои заявки</h1>
+						<span class="badge" id="applicationsCount">0 заявок</span>
+					</div>
+
+					<div class="headerCenter">
+						<div class="searchContainer">
+							<i class="bi bi-search searchIcon"></i>
+							<input
+								type="text"
+								id="searchInput"
+								class="searchInput"
+								placeholder="Поиск по заявкам..."
+							/>
+						</div>
+					</div>
+
+					<div class="headerRight">
+						<select id="statusFilter" class="selectControl">
+							<option value="">Все статусы</option>
+						</select>
+						<button id="logoutBtn" class="btn btnSecondary">
+							<i class="bi bi-box-arrow-right"></i>
+						</button>
+					</div>
+				</header>
+
+				<!-- Контент -->
+				<section class="contentSection">
+					<div id="applicationsContainer" class="cardsGrid">
+						<!-- Карточки заявок -->
+					</div>
+
+					<!-- Пагинация -->
+					<div
+						class="paginationContainer"
+						id="paginationContainer"
+						style="display: none"
+					>
+						<div class="paginationInfo">
+							Показаны <span id="paginationShown">0</span> из
+							<span id="paginationTotal">0</span> заявок
+						</div>
+						<div class="paginationControls">
+							<button class="paginationBtn" id="prevPageBtn" disabled>
+								<i class="bi bi-chevron-left"></i> Предыдущая
+							</button>
+							<span class="paginationCurrent">
+								Страница <span id="currentPage">1</span> из
+								<span id="totalPages">1</span>
+							</span>
+							<button class="paginationBtn" id="nextPageBtn" disabled>
+								Следующая <i class="bi bi-chevron-right"></i>
+							</button>
+						</div>
+					</div>
+
+					<div class="emptyState" id="emptyState" style="display: none">
+						<i class="bi bi-inbox"></i>
+						<h3>Нет заявок</h3>
+						<p>Создайте первую заявку для управления номерным фондом</p>
+					</div>
+					<div
+						class="alert alert-danger"
+						id="errorMessage"
+						style="display: none"
+					></div>
+				</section>
+			</main>
+		</div>
+
+		<script src="/assets/js/api.js"></script>
+		<script src="/assets/js/auth.js"></script>
+		<script src="/assets/js/pages/dashboard.js"></script>
+	</body>
+</html>

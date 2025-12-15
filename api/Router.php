@@ -40,8 +40,7 @@ class Router
 
     private function initRoutes()
     {
-        require_once 'Service/Validator.php';
-
+        $this->routes['GET']['user/me'] = fn($input) => $this->auth->handle(fn() => $this->controllers['user']->getMe());
         $this->routes['POST']['registration'] = function ($input) {
             $validator = new Validator();
             $rules = [

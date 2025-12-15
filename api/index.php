@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-$ip = $_SERVER['REMOTE_ADDR'];
+$ip_ = $_SERVER['REMOTE_ADDR'] ?? null;
 $key = "rate_$ip_" . date('Y-m-d-H');
 $_SESSION[$key] = ($_SESSION[$key] ?? 0) + 1;
 if ($_SESSION[$key] > 300) {

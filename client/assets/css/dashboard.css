@@ -1,0 +1,319 @@
+body {
+	overflow: hidden;
+	height: 100vh;
+}
+
+.dashboardPage {
+	height: 100vh;
+	display: flex;
+	background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+/* САЙДБАР */
+.sidebar {
+	width: 280px;
+	background: var(--color-bg);
+	backdrop-filter: blur(20px);
+	border-right: 1px solid rgba(255, 255, 255, 0.3);
+	display: flex;
+	flex-direction: column;
+	box-shadow: 2px 0 20px rgba(0, 0, 0, 0.05);
+}
+
+.sidebarHeader {
+	padding: 2rem 1.5rem;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.logo {
+	width: 64px;
+	height: 64px;
+	background: var(--color-primary);
+	border-radius: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-size: 1.75rem;
+	margin-bottom: 0.75rem;
+}
+
+.sidebarHeader h3 {
+	color: var(--color-text-dark);
+	font-size: 1.25rem;
+	font-weight: 600;
+}
+
+.sidebarNav {
+	flex: 1;
+	padding: 1rem 0;
+}
+
+.navItem {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 1rem 1.5rem;
+	color: var(--color-text-muted);
+	text-decoration: none;
+	transition: var(--transition);
+	font-weight: 500;
+}
+
+.navItem:hover,
+.navItem.active {
+	background: rgba(255, 167, 38, 0.08);
+	color: var(--color-primary);
+}
+
+.navItem i {
+	font-size: 1.25rem;
+	width: 24px;
+}
+
+.userInfo {
+	margin-top: 1rem;
+}
+
+.userName {
+	font-weight: 600;
+	color: var(--color-text-dark);
+	font-size: 1rem;
+}
+
+.userRole {
+	font-size: 0.875rem;
+	color: #10b981;
+	background: rgba(16, 185, 129, 0.1);
+	padding: 0.25rem 0.75rem;
+	border-radius: 12px;
+	font-weight: 500;
+	margin-top: 0.25rem;
+}
+
+/* ОСНОВНОЙ КОНТЕНТ */
+.mainContent {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.pageHeader {
+	padding: 1.5rem 2rem;
+	background: var(--color-bg);
+	backdrop-filter: blur(20px);
+	border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+	display: flex;
+	align-items: center;
+	gap: 1.5rem;
+	flex-wrap: wrap;
+}
+
+.headerCenter {
+	flex: 1;
+	max-width: 500px;
+	position: relative;
+}
+
+.searchContainer {
+	position: relative;
+	width: 100%;
+}
+
+.searchInput {
+	width: 100%;
+	padding: 0.875rem 1rem 0.875rem 3rem;
+	border: 2px solid var(--color-border);
+	border-radius: 16px;
+	font-size: 0.95rem;
+	transition: var(--transition);
+	background: white;
+}
+
+.searchInput:focus {
+	border-color: var(--color-primary);
+	box-shadow: 0 0 0 3px rgba(255, 167, 38, 0.1);
+}
+
+.searchIcon {
+	position: absolute;
+	left: 1rem;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--color-text-muted);
+	font-size: 1.1rem;
+}
+
+.headerTitle h1 {
+	font-size: 1.75rem;
+	color: var(--color-text-dark);
+	margin-bottom: 0.25rem;
+}
+
+/* КАРТОЧКИ */
+.contentSection {
+	flex: 1;
+	padding: 2rem;
+	overflow-y: auto;
+}
+
+.cardsGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+	gap: 1.5rem;
+	max-width: 1400px;
+	margin: 0 auto;
+}
+
+.applicationCard {
+	background: white;
+	border-radius: var(--radius-lg);
+	padding: 1.75rem;
+	border: 1px solid rgba(0, 0, 0, 0.05);
+	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+	transition: var(--transition);
+	cursor: pointer;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.applicationCard:hover {
+	transform: translateY(-8px);
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+}
+
+.cardHeader {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	margin-bottom: 1rem;
+}
+
+.cardNumber {
+	font-size: 0.875rem;
+	color: var(--color-text-muted);
+	font-weight: 500;
+}
+
+.cardPlace {
+	font-size: 1.125rem;
+	font-weight: 700;
+	color: var(--color-text-dark);
+	margin-bottom: 0.75rem;
+	line-height: 1.3;
+}
+
+.cardDescription {
+	color: #4b5563;
+	line-height: 1.5;
+	flex: 1;
+	margin-bottom: 1.25rem;
+}
+
+.cardMeta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin-bottom: 1.25rem;
+}
+
+.metaItem {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	font-size: 0.875rem;
+	color: var(--color-text-muted);
+}
+
+.cardFooter {
+	margin-top: auto;
+	padding-top: 1rem;
+	border-top: 1px solid rgba(0, 0, 0, 0.05);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.createdDate {
+	font-size: 0.8125rem;
+	color: #9ca3af;
+}
+
+/* ПАГИНАЦИЯ */
+.paginationContainer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 2rem;
+	padding: 1.5rem;
+	border-top: 1px solid rgba(0, 0, 0, 0.05);
+	background: var(--color-bg);
+	backdrop-filter: blur(10px);
+	border-radius: 16px;
+}
+
+.paginationInfo {
+	color: var(--color-text-muted);
+	font-size: 0.9rem;
+}
+
+.paginationControls {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.paginationBtn {
+	padding: 0.75rem 1.5rem;
+	border: 1px solid var(--color-border);
+	background: white;
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-weight: 500;
+	transition: var(--transition);
+}
+
+.paginationBtn:hover:not(:disabled) {
+	background: #f3f4f6;
+	border-color: var(--color-text-muted);
+}
+
+/* АДАПТИВ  */
+@media (max-width: 1024px) {
+	.sidebar {
+		transform: translateX(-100%);
+		position: fixed;
+		z-index: 100;
+		height: 100vh;
+	}
+
+	.cardsGrid {
+		grid-template-columns: 1fr;
+		gap: 1rem;
+		padding: 1rem;
+	}
+}
+
+@media (max-width: 768px) {
+	.pageHeader {
+		padding: 1rem;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 1rem;
+	}
+
+	.contentSection {
+		padding: 1rem;
+	}
+
+	.paginationContainer {
+		flex-direction: column;
+		gap: 1rem;
+		text-align: center;
+	}
+}
