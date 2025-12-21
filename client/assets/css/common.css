@@ -1,0 +1,246 @@
+/* Цвета, размеры */
+
+:root {
+	--color-primary: #ffa726;
+	--color-danger: #e74c3c;
+	--color-accent: #2196f3;
+	--color-bg: rgba(255, 255, 255, 0.95);
+	--color-border: #e0e6ed;
+	--color-text-muted: #6c757d;
+	--color-text-dark: #2c3e50;
+	--radius-md: 12px;
+	--radius-lg: 20px;
+	--transition: all 0.3s ease;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+/* Общие настройки страниц */
+
+body {
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+	min-height: 100vh;
+	line-height: 1.6;
+	color: var(--color-text-dark);
+}
+
+.decoration {
+	position: absolute;
+	width: 150px;
+	height: 150px;
+	border-radius: 50%;
+	z-index: 0;
+	display: none;
+}
+
+@media (min-width: 769px) {
+	.decoration {
+		display: block;
+	}
+}
+
+.container {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 1rem;
+}
+
+/* Кнопки */
+
+.btn {
+	padding: 0.8rem 1.4rem;
+	border: none;
+	border-radius: var(--radius-md);
+	font-size: 0.95rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: var(--transition);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	text-decoration: none;
+}
+
+.btnPrimary {
+	background: var(--color-primary);
+	color: #fff;
+	box-shadow: 0 4px 12px rgba(255, 167, 38, 0.3);
+}
+
+.btnPrimary:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 6px 18px rgba(255, 167, 38, 0.4);
+}
+
+.btnSecondary {
+	background: #fff;
+	border: 1px solid var(--color-border);
+	color: var(--color-text-dark);
+}
+
+.btnSecondary:hover {
+	background: #f8f9fa;
+}
+
+.btnDanger {
+	background: var(--color-danger);
+	color: #fff;
+}
+
+.btn:disabled {
+	opacity: 0.7;
+	cursor: not-allowed;
+}
+
+/* ФОРМЫ (общие инпуты + ошибки) */
+.formGroup {
+	margin-bottom: 1.1rem;
+}
+
+.inputWrapper {
+	position: relative;
+}
+
+.inputWrapper > i {
+	position: absolute;
+	left: 1rem;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--color-text-muted);
+	pointer-events: none;
+}
+
+.formControl {
+	width: 100%;
+	padding: 0.7rem 2.8rem 0.7rem 2.6rem;
+	border: 2px solid var(--color-border);
+	border-radius: var(--radius-md);
+	font-size: 0.95rem;
+	background: #fff;
+	transition: var(--transition);
+}
+
+.formControl:focus {
+	outline: none;
+	border-color: var(--color-primary);
+	box-shadow: 0 0 0 3px rgba(255, 167, 38, 0.12);
+}
+
+.formControl.error {
+	border-color: var(--color-danger);
+	box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.12);
+}
+
+.passwordToggleBtn {
+	position: absolute;
+	right: 0.9rem;
+	top: 50%;
+	transform: translateY(-50%);
+	background: transparent;
+	border: none;
+	color: var(--color-text-muted);
+	cursor: pointer;
+	width: 26px;
+	height: 26px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.errorMessageInline {
+	color: var(--color-danger);
+	font-size: 0.8rem;
+	margin-top: 0.25rem;
+	min-height: 1rem;
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.spinner {
+	width: 1rem;
+	height: 1rem;
+	border: 2px solid rgba(255, 255, 255, 0.35);
+	border-top: 2px solid #fff;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+}
+
+.alert {
+	padding: 0.7rem 1rem;
+	border-radius: var(--radius-md);
+	font-size: 0.85rem;
+	margin-top: 0.9rem;
+}
+
+.alert-danger {
+	background: rgba(231, 76, 60, 0.08);
+	border: 1px solid rgba(231, 76, 60, 0.18);
+	color: var(--color-danger);
+}
+
+.badge {
+	background: rgba(148, 163, 184, 0.16);
+	color: #475569;
+	padding: 0.22rem 0.6rem;
+	border-radius: 999px;
+	font-size: 0.78rem;
+}
+
+/* TOAST УВЕДОМЛЕНИЯ */
+.toastContainer {
+	position: fixed;
+	top: 20px;
+	right: 20px;
+	z-index: 10000;
+	max-width: 400px;
+}
+
+.toast {
+	padding: 1rem 1.25rem;
+	border-radius: var(--radius-lg);
+	font-size: 0.9rem;
+	font-weight: 500;
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+	transform: translateX(110%);
+	opacity: 0;
+	transition: var(--transition);
+	margin-bottom: 1rem;
+	backdrop-filter: blur(10px);
+}
+
+.toast.show {
+	transform: translateX(0);
+	opacity: 1;
+}
+
+.toast.error {
+	background: linear-gradient(135deg, #fee2e2, #fecaca);
+	border: 1px solid rgba(239, 68, 68, 0.3);
+	color: var(--color-danger);
+}
+
+.toast.success {
+	background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+	border: 1px solid rgba(34, 197, 94, 0.3);
+	color: #166534;
+}
+
+/* Мобильный */
+@media (max-width: 768px) {
+	.toastContainer {
+		top: 10px;
+		right: 10px;
+		left: 10px;
+		max-width: none;
+	}
+}

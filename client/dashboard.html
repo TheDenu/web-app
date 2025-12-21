@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Мои заявки — Общежитие</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link
+			href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+			rel="stylesheet"
+		/>
+		<link rel="stylesheet" href="/assets/css/common.css" />
+		<link rel="stylesheet" href="/assets/css/dashboard.css" />
+	</head>
+	<body>
+		<div class="dashboardPage">
+			<aside class="sidebar">
+				<div class="sidebarHeader">
+					<div class="logo">
+						<i class="bi bi-door-open"></i>
+					</div>
+					<div class="userInfo">
+						<div id="userName" class="userName"></div>
+						<div id="userRole" class="userRole"></div>
+					</div>
+				</div>
+				<nav class="sidebarNav">
+					<a href="" data-view="my" class="navItem active">
+						<i class="bi bi-list-ul"></i>
+						<span>Мои заявки</span>
+					</a>
+					<a href="create.html" data-view="new" class="navItem createLink">
+						<i class="bi bi-plus-circle"></i>
+						<span>Новая заявка</span>
+					</a>
+					<a
+						href="admin.html"
+						data-view="admin"
+						class="navItem adminLink"
+						style="display: none"
+					>
+						<i class="bi bi-people"></i>
+						<span>Панель админа</span>
+					</a>
+				</nav>
+				<button class="logoutBtn navItem" id="logoutBtn">
+					<i class="bi bi-box-arrow-right"></i>
+					Выйти
+				</button>
+			</aside>
+
+			<main class="mainContent">
+				<header class="pageHeader">
+					<div class="headerLeft">
+						<h1 id="pageTitle">Мои заявки</h1>
+					</div>
+
+					<div class="headerCenter">
+						<div class="searchContainer">
+							<i class="bi bi-search searchIcon"></i>
+							<input
+								type="text"
+								id="searchInput"
+								class="searchInput"
+								placeholder="Поиск по заявкам..."
+							/>
+						</div>
+					</div>
+
+					<div class="headerRight">
+						<select id="statusFilter" class="selectControl">
+							<option value="">Все статусы</option>
+						</select>
+						<select id="sortSelect" class="selectControl">
+							<option value="date_desc">Сначала новые</option>
+							<option value="date_asc">Сначала старые</option>
+						</select>
+					</div>
+				</header>
+
+				<section class="contentSection">
+					<div id="applicationsContainer" class="cardsGrid"></div>
+					<div
+						class="paginationContainer"
+						id="paginationContainer"
+						style="display: none"
+					></div>
+					<div class="emptyState" id="emptyState" style="display: none">
+						<i class="bi bi-inbox"></i>
+						<h3>Нет заявок</h3>
+						<p>Создайте первую заявку на ремонт</p>
+					</div>
+					<div id="pagination" class="pagination">
+						<button id="prevPageBtn" class="pageBtn" disabled>
+							<i class="bi bi-chevron-left"></i>
+						</button>
+						<span id="paginationInfo" class="paginationInfo"
+							>Страница 1 из 1</span
+						>
+						<button id="nextPageBtn" class="pageBtn" disabled>
+							<i class="bi bi-chevron-right"></i>
+						</button>
+					</div>
+				</section>
+			</main>
+		</div>
+
+		<div class="modalBackdrop" id="applicationModal" style="display: none">
+			<div class="modalDialog">
+				<button class="modalCloseBtn" id="modalCloseBtn" type="button">
+					<i class="bi bi-x-lg"></i>
+				</button>
+				<div class="modalHeader">
+					<div class="modalTitleRow">
+						<span id="modalAppNumber" class="modalAppNumber">#0</span>
+						<span id="modalStatus" class="statusBadge">Статус</span>
+					</div>
+					<div id="modalPlace" class="modalPlace">Этаж, секция, комната</div>
+				</div>
+				<div class="modalBody">
+					<div class="modalMetaRow">
+						<span class="metaItem">
+							<i class="bi bi-calendar"></i>
+							<span id="modalCreatedAt">—</span>
+						</span>
+						<span class="metaItem">
+							<i class="bi bi-bug"></i>
+							<span id="modalDefectType">—</span>
+						</span>
+						<span class="metaItem">
+							<i class="bi bi-arrow-up"></i>
+							<span id="modalPriority">—</span>
+						</span>
+					</div>
+					<div class="modalSection">
+						<h3>Описание</h3>
+						<p id="modalDescription">—</p>
+					</div>
+					<div class="modalSection">
+						<h3>Фото</h3>
+						<div id="modalPhotos" class="modalPhotos"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="toastContainer" class="toastContainer"></div>
+	</body>
+	<script src="/assets/js/api.js"></script>
+	<script src="/assets/js/auth.js"></script>
+	<script src="/assets/js/pages/dashboard.js"></script>
+</html>

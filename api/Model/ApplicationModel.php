@@ -9,9 +9,9 @@ class ApplicationModel
         $this->mysqli = $mysqli;
     }
 
-    public function getAll(int $limit = 20, int $offset = 0)
+    public function getAll(int $limit = 10, int $offset = 0, ?int $status_id = null, ?string $search = null): array
     {
-        $stmt = $this->mysqli->prepare("
+        $sql = "
         SELECT a.*, 
                n.fio as user_fio,
                u.login as user_login,
@@ -26,10 +26,66 @@ class ApplicationModel
         LEFT JOIN defect_types dt ON a.defect_type_id = dt.id_defect_type
         LEFT JOIN priorities pr ON a.priority_id = pr.id_priority
         LEFT JOIN statuses s ON a.status_id = s.id_status
-        ORDER BY a.created_at DESC
-        LIMIT ? OFFSET ?
+        WHERE 1=1
+    ";
+
+        $params = [];
+        $types = '';
+
+        if ($status_id !== null) {
+            $sql .= " AND a.status_id = ?";
+            $types .= 'i';
+            $params[] = $status_id;
+        }
+
+        if ($search !== null && $search !== '') {
+            $sql .= " AND (
+            a.description LIKE CONCAT('%', ?, '%')
+            OR n.fio LIKE CONCAT('%', ?, '%')
+            OR u.login LIKE CONCAT('%', ?, '%')
+            OR p.room LIKE CONCAT('%', ?, '%')
+            OR p.section LIKE CONCAT('%', ?, '%')
+            OR p.floor LIKE CONCAT('%', ?, '%')
+        )";
+            $types .= 'ssssss';
+            $search_param = trim($search);
+            $params[] = $search_param;
+            $params[] = $search_param;
+            $params[] = $search_param;
+            $params[] = $search_param;
+            $params[] = $search_param;
+            $params[] = $search_param;
+        }
+
+        $sql .= " ORDER BY a.created_at DESC LIMIT ? OFFSET ?";
+        $types .= 'ii';
+        $params[] = $limit;
+        $params[] = $offset;
+
+        $stmt = $this->mysqli->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $apps = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        foreach ($apps as &$app) {
+            $app['photos'] = $this->getPhotosByApplicationId((int)$app['id_application']);
+        }
+
+        return $apps;
+    }
+    
+    public function getAdminStats(): array
+    {
+        $stmt = $this->mysqli->prepare("
+        SELECT 
+            s.id_status,
+            s.name,
+            COUNT(a.id_application) as count
+        FROM statuses s
+        LEFT JOIN applications a ON s.id_status = a.status_id
+        GROUP BY s.id_status, s.name
+        ORDER BY s.id_status
     ");
-        $stmt->bind_param("ii", $limit, $offset);
         $stmt->execute();
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
@@ -43,9 +99,14 @@ class ApplicationModel
         return (int)$result['count'];
     }
 
-    public function getByUser(int $user_id, int $limit = 20, int $offset = 0)
-    {
-        $stmt = $this->mysqli->prepare("
+    public function getByUser(
+        int $user_id,
+        int $limit = 10,
+        int $offset = 0,
+        ?string $search = null,
+        ?int $status_id = null
+    ): array {
+        $sql = "
         SELECT a.*, 
                n.fio as user_fio,
                p.floor, p.room, p.section,
@@ -60,14 +121,46 @@ class ApplicationModel
         LEFT JOIN priorities pr ON a.priority_id = pr.id_priority
         LEFT JOIN statuses s ON a.status_id = s.id_status
         WHERE a.user_id = ?
-        ORDER BY a.created_at DESC
-        LIMIT ? OFFSET ?
-    ");
-        $stmt->bind_param("iii", $user_id, $limit, $offset);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    }
+    ";
 
+        $params = [$user_id];
+        $types  = 'i';
+
+        if ($status_id !== null) {
+            $sql .= " AND a.status_id = ?";
+            $types .= 'i';
+            $params[] = $status_id;
+        }
+
+        if ($search !== null && $search !== '') {
+            $sql .= " AND (
+            a.description LIKE CONCAT('%', ?, '%')
+            OR p.room LIKE CONCAT('%', ?, '%')
+            OR p.section LIKE CONCAT('%', ?, '%')
+        )";
+            $types .= 'sss';
+            $params[] = $search;
+            $params[] = $search;
+            $params[] = $search;
+        }
+
+        $sql .= " ORDER BY a.created_at DESC LIMIT ? OFFSET ?";
+
+        $types .= 'ii';
+        $params[] = $limit;
+        $params[] = $offset;
+
+        $stmt = $this->mysqli->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $apps = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        foreach ($apps as &$app) {
+            $app['photos'] = $this->getPhotosByApplicationId((int)$app['id_application']);
+        }
+
+        return $apps;
+    }
 
     public function getUserApplicationsCount(int $user_id): int
     {
@@ -77,6 +170,24 @@ class ApplicationModel
         $result = $stmt->get_result()->fetch_assoc();
         return (int)$result['count'];
     }
+
+    private function getPhotosByApplicationId(int $applicationId): array
+    {
+        $stmt = $this->mysqli->prepare("
+        SELECT path 
+        FROM photos 
+        WHERE application_id = ?
+        ORDER BY id_photo ASC
+    ");
+        $stmt->bind_param("i", $applicationId);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        return array_column($rows, 'path');
+    }
+
+
+
 
     public function create($user_id, $data, $files = null)
     {

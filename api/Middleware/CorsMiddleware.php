@@ -13,10 +13,10 @@ class CorsMiddleware
         header("Access-Control-Allow-Origin: *");
         header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
         header("Access-Control-Allow-Headers: Authorization, Content-Type, Accept");
-        
+
         // В продакшене добавь:
-        //header("Access-Control-Allow-Origin: https://your-frontend-domain.com"); //Адрес клиента
-        //header("Access-Control-Allow-Credentials: true");
+        header("Access-Control-Allow-Origin: https://web-app");
+        header("Access-Control-Allow-Credentials: true");
 
         // При preflight-запросе OPTIONS просто завершаем
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

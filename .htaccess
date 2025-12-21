@@ -1,4 +1,29 @@
 RewriteEngine On
+
+# 1. ТВОЕ ПРАВИЛО API — ПЕРВЫМ (высший приоритет!)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^api/(.*)$ api/index.php [QSA,L]
+
+# Блок служебных
+RedirectMatch 403 "^/(\.git|\.osp|\.ini)"
+
+# Редирект корня
+DirectoryIndex /client/index.html
+
+# 4. ✨ УБИРАЕМ /client из URL — ПЕРЕНАПРАВЛЯЕМ ВНУТРИ
+# /login.html → /client/login.html
+# /dashboard.html → /client/dashboard.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(admin|login|dashboard|registration|create)\.html$ /client/$1.html [L]
+
+# /assets/... → /client/assets/...
+RewriteRule ^assets/(.*)$ /client/assets/$1 [L]
+
+# 5. SPA: всё остальное → client/index.html
+RewriteCond %{REQUEST_URI} !^/api [NC]
+RewriteCond %{REQUEST_URI} !^/client [NC]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ /client/index.html [L]

@@ -11,6 +11,20 @@ class UserModel
         $this->jwtService = $jwtService;
     }
 
+    public function getById(int $userId): ?array
+    {
+        $stmt = $this->mysqli->prepare("
+        SELECT id_user, login, fio_id, role_id 
+        FROM users 
+        WHERE id_user = ?
+    ");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        return $result->fetch_assoc() ?: null;
+    }
+
     public function getByFio(string $fio)
     {
         $stmt = $this->mysqli->prepare("SELECT id_fio FROM names WHERE fio = ? LIMIT 1");
