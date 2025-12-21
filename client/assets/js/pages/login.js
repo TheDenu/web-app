@@ -8,8 +8,6 @@
 	const spinner = document.getElementById('spinner')
 	const loginIcon = document.getElementById('loginIcon')
 	const errorMessage = document.getElementById('errorMessage')
-	const usernameError = document.getElementById('usernameError')
-	const passwordError = document.getElementById('passwordError')
 	const showRegisterBtn = document.getElementById('showRegisterBtn')
 
 	// Toggle пароля
@@ -45,23 +43,26 @@
 	function validateForm() {
 		const errors = []
 
-		// Логин
 		const login = usernameInput.value.trim()
 		if (login.length < 3) {
 			errors.push('Логин должен содержать минимум 3 символа')
+			usernameInput.classList.add('error')
 		} else {
 			clearFieldError(usernameInput)
 		}
 
-		// Пароль
 		const password = passwordInput.value
-		if (password.length < 8) {
-			errors.push('Пароль должен содержать минимум 8 символов')
-			isValid = false
+		if (password.length < 4) {
+			errors.push('Пароль должен содержать минимум 4 символов')
+			passwordInput.classList.add('error')
 		} else {
 			clearFieldError(passwordInput)
 		}
 
+		if (errors.length > 0) {
+			showToast(errors.join(' | '), 'error')
+			return false
+		}
 		return true
 	}
 
@@ -82,15 +83,20 @@
 			}
 
 			const data = await resp.json()
-			console.log('login /api/login data =', data)
 
 			// Сохраняем токен
 			saveToken(data.token)
 
+			const role = data.user?.role
+
 			showToast('Авторизация успешна! Переходим в личный кабинет...', 'success')
 			setTimeout(() => {
-				window.location.href = '/dashboard.html'
-			}, 1500)
+				if (role === 'admin') {
+					window.location.href = '/admin.html'
+				} else {
+					window.location.href = '/dashboard.html'
+				}
+			}, 500)
 		} catch (error) {
 			showToast(error.message, 'error')
 		} finally {

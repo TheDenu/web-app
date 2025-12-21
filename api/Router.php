@@ -89,14 +89,6 @@ class Router
             }
             $this->auth->handle(fn() => $this->controllers['application']->createApplication($input));
         };
-        $this->routes['GET']['application/list'] = fn($input) => $this->auth->handle(function () {
-            if (AuthMiddleware::isAdmin()) {
-                $this->controllers['application']->getAll();
-            } else {
-                http_response_code(403);
-                echo json_encode(['error' => 'Только для администраторов']);
-            }
-        });
         $this->routes['GET']['application/my-list'] = fn($input) => $this->auth->handle(fn() => $this->controllers['application']->getMy());
         $this->routes['DELETE']['application/delete'] = function ($input) {
             $validator = new Validator();
@@ -109,7 +101,24 @@ class Router
             }
             $this->auth->handle(fn() => $this->controllers['application']->deleteApplication($input));
         };
-        $this->routes['PUT']['application/update-status'] = function ($input) {
+        //Админ
+        $this->routes['GET']['application/list'] = fn($input) => $this->auth->handle(function () {
+            if (AuthMiddleware::isAdmin()) {
+                $this->controllers['application']->getAll();
+            } else {
+                http_response_code(403);
+                echo json_encode(['error' => 'Только для администраторов']);
+            }
+        });
+        $this->routes['GET']['application/admin/stats'] = fn($input) => $this->auth->handle(function () {
+            if (AuthMiddleware::isAdmin()) {
+                $this->controllers['application']->getAdminStats();
+            } else {
+                http_response_code(403);
+                echo json_encode(['error' => 'Только для администраторов']);
+            }
+        });
+        $this->routes['PUT']['application/admin/status'] = function ($input) {
             $validator = new Validator();
             $rules = [
                 'application_id' => ['required', 'int', 'min:1'],

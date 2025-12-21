@@ -16,7 +16,7 @@ DirectoryIndex /client/index.html
 # /dashboard.html → /client/dashboard.html
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(login|dashboard|registration|create)\.html$ /client/$1.html [L]
+RewriteRule ^(admin|login|dashboard|registration|create)\.html$ /client/$1.html [L]
 
 # /assets/... → /client/assets/...
 RewriteRule ^assets/(.*)$ /client/assets/$1 [L]

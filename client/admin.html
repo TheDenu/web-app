@@ -2,7 +2,7 @@
 <html lang="ru">
 	<head>
 		<meta charset="UTF-8" />
-		<title>Мои заявки — Общежитие</title>
+		<title>Панель админа — Общежитие</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link
 			href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
@@ -10,6 +10,7 @@
 		/>
 		<link rel="stylesheet" href="/assets/css/common.css" />
 		<link rel="stylesheet" href="/assets/css/dashboard.css" />
+		<link rel="stylesheet" href="/assets/css/admin.css" />
 	</head>
 	<body>
 		<div class="dashboardPage">
@@ -24,20 +25,15 @@
 					</div>
 				</div>
 				<nav class="sidebarNav">
-					<a href="#" data-view="my" class="navItem active">
+					<a href="dashboard.html" class="navItem">
 						<i class="bi bi-list-ul"></i>
 						<span>Мои заявки</span>
 					</a>
-					<a href="create.html" data-view="new" class="navItem">
+					<a href="create.html" class="navItem">
 						<i class="bi bi-plus-circle"></i>
 						<span>Новая заявка</span>
 					</a>
-					<a
-						href="admin.html"
-						data-view="admin"
-						class="navItem adminLink"
-						style="display: none"
-					>
+					<a href="#" data-view="admin" class="navItem active">
 						<i class="bi bi-people"></i>
 						<span>Панель админа</span>
 					</a>
@@ -51,7 +47,9 @@
 			<main class="mainContent">
 				<header class="pageHeader">
 					<div class="headerLeft">
-						<h1 id="pageTitle">Мои заявки</h1>
+						<h1>Все заявки</h1>
+						<!-- СТАТИСТИКА СТАТУСОВ -->
+						<div class="statsRow" id="statsRow"></div>
 					</div>
 
 					<div class="headerCenter">
@@ -61,18 +59,14 @@
 								type="text"
 								id="searchInput"
 								class="searchInput"
-								placeholder="Поиск по заявкам..."
+								placeholder="Поиск по описанию, ФИО, комнате..."
 							/>
 						</div>
 					</div>
 
-					<div class="headerRight">
+					<div class="headerRight" >
 						<select id="statusFilter" class="selectControl">
 							<option value="">Все статусы</option>
-						</select>
-						<select id="sortSelect" class="selectControl">
-							<option value="date_desc">Сначала новые</option>
-							<option value="date_asc">Сначала старые</option>
 						</select>
 					</div>
 				</header>
@@ -80,14 +74,19 @@
 				<section class="contentSection">
 					<div id="applicationsContainer" class="cardsGrid"></div>
 					<div
-						class="paginationContainer"
-						id="paginationContainer"
-						style="display: none"
-					></div>
-					<div class="emptyState" id="emptyState" style="display: none">
-						<i class="bi bi-inbox"></i>
+						class="emptyState"
+						id="emptyState"
+						style="
+							grid-column: 1/-1;
+							text-align: center;
+							padding: 4rem;
+							color: #6b7280;
+							display: none;
+						"
+					>
+						<i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.5"></i>
 						<h3>Нет заявок</h3>
-						<p>Создайте первую заявку на ремонт</p>
+						<p>Заявок пока нет</p>
 					</div>
 					<div id="pagination" class="pagination">
 						<button id="prevPageBtn" class="pageBtn" disabled>
@@ -104,23 +103,31 @@
 			</main>
 		</div>
 
+		<!-- МОДАЛКА С SELECT ДЛЯ СМЕНЫ СТАТУСА -->
 		<div class="modalBackdrop" id="applicationModal" style="display: none">
 			<div class="modalDialog">
-				<button class="modalCloseBtn" id="modalCloseBtn" type="button">
-					<i class="bi bi-x-lg"></i>
-				</button>
 				<div class="modalHeader">
 					<div class="modalTitleRow">
 						<span id="modalAppNumber" class="modalAppNumber">#0</span>
-						<span id="modalStatus" class="statusBadge">Статус</span>
 					</div>
-					<div id="modalPlace" class="modalPlace">Этаж, секция, комната</div>
+					<!-- SELECT ДЛЯ СМЕНЫ СТАТУСА -->
+					<select id="statusSelect" class="statusSelect">
+						<!-- заполняется динамически -->
+					</select>
+					<button class="modalCloseBtn" id="modalCloseBtn" type="button">
+						<i class="bi bi-x-lg"></i>
+					</button>
 				</div>
+				<div id="modalPlace" class="modalPlace">Этаж, секция, комната</div>
 				<div class="modalBody">
 					<div class="modalMetaRow">
 						<span class="metaItem">
 							<i class="bi bi-calendar"></i>
 							<span id="modalCreatedAt">—</span>
+						</span>
+						<span class="metaItem">
+							<i class="bi bi-person"></i>
+							<span id="modalUser">—</span>
 						</span>
 						<span class="metaItem">
 							<i class="bi bi-bug"></i>
@@ -142,9 +149,11 @@
 				</div>
 			</div>
 		</div>
+
 		<div id="toastContainer" class="toastContainer"></div>
+
+		<script src="/assets/js/api.js"></script>
+		<script src="/assets/js/auth.js"></script>
+		<script src="/assets/js/pages/admin.js"></script>
 	</body>
-	<script src="/assets/js/api.js"></script>
-	<script src="/assets/js/auth.js"></script>
-	<script src="/assets/js/pages/dashboard.js"></script>
 </html>

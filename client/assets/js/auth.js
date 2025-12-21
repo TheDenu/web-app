@@ -14,7 +14,7 @@ async function authedFetch(endpoint, options = {}) {
 	const token = getToken()
 	if (!token) throw new Error('Не авторизован')
 
-	const resp = await fetch(endpoint, {
+	const resp = await fetch(`/api${endpoint}`, {
 		...options,
 		headers: {
 			Authorization: `Bearer ${token}`,

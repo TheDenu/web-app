@@ -1,22 +1,25 @@
-class StudentDashboard {
+class AdminDashboard {
 	constructor() {
 		this.applications = []
+		this.stats = []
+		this.statuses = []
 		this.search = ''
 		this.statusId = ''
 		this.pagination = { page: 1, pages: 1, total: 0, limit: 12 }
-		this.sort = 'date_desc'
 		this.init()
 	}
 
 	async init() {
 		try {
 			await this.loadUserProfile()
+			await Promise.all([this.loadStats(), this.loadApplications()])
 			this.setupEventListeners()
-			await this.loadApplications()
 		} catch (e) {
+			console.error('Init error:', e)
 			showToast('Ошибка инициализации', 'error')
 		}
 	}
+
 	async loadUserProfile() {
 		try {
 			const resp = await authedFetch(API.endpoints.userMe)
@@ -24,24 +27,39 @@ class StudentDashboard {
 			const userNameEl = document.getElementById('userName')
 			const userRoleEl = document.getElementById('userRole')
 
-			if (userNameEl) {
-				userNameEl.textContent = user.login || 'Пользователь'
-			}
-
-			if (userRoleEl) {
-				if (user.role === 'admin') {
-					userRoleEl.textContent = 'Комендант'
-					const adminLink = document.querySelector('.adminLink')
-					if (adminLink) {
-						adminLink.style.display = 'flex'
-					}
-				} else {
-					userRoleEl.textContent = 'Пользователь'
-				}
-			}
+			if (userNameEl) userNameEl.textContent = user.login || 'Админ'
+			if (userRoleEl) userRoleEl.textContent = 'Комендант'
 		} catch (error) {
 			showToast('Ошибка загрузки профиля', 'error')
 		}
+	}
+
+	async loadStats() {
+		try {
+			const resp = await authedFetch('/application/admin/stats')
+			const data = await resp.json()
+			this.stats = data.stats || []
+			this.statuses = this.stats
+			this.renderStats()
+		} catch (error) {
+			console.error('Stats error:', error)
+		}
+	}
+
+	renderStats() {
+		const container = document.getElementById('statsRow')
+		if (!container) return
+
+		container.innerHTML = this.stats
+			.map(
+				stat => `
+        <div class="statBadge status-${stat.id_status}" data-status-id="${stat.id_status}">
+            <div class="statLabel">${stat.name}</div>
+            <div class="statCount">${stat.count}</div>
+        </div>
+    `
+			)
+			.join('')
 	}
 
 	setupEventListeners() {
@@ -56,7 +74,7 @@ class StudentDashboard {
 			if (e.key === 'Escape') this.closeModal()
 		})
 
-		// Поиск (debounce)
+		// Поиск
 		const searchInput = document.getElementById('searchInput')
 		searchInput.addEventListener(
 			'input',
@@ -67,17 +85,12 @@ class StudentDashboard {
 			}, 300)
 		)
 
+		// Фильтр статусов
 		const statusFilter = document.getElementById('statusFilter')
 		statusFilter.addEventListener('change', e => {
 			this.statusId = e.target.value
 			this.pagination.page = 1
 			this.loadApplications()
-		})
-
-		const sortSelect = document.getElementById('sortSelect')
-		sortSelect.addEventListener('change', e => {
-			this.sort = e.target.value
-			this.renderApplications()
 		})
 
 		// Выход
@@ -86,15 +99,7 @@ class StudentDashboard {
 			window.location.href = '/login.html'
 		})
 
-		// Навигация
-		document.querySelectorAll('.navItem').forEach(item => {
-			item.addEventListener('click', e => {
-				e.preventDefault()
-				this.switchView(item.dataset.view)
-			})
-		})
-
-		//Пагинация
+		// Пагинация
 		document.getElementById('prevPageBtn').addEventListener('click', () => {
 			if (this.pagination.page > 1) {
 				this.pagination.page--
@@ -108,19 +113,17 @@ class StudentDashboard {
 			}
 		})
 
-		const adminLink = document.querySelector('.adminLink')
-		if (adminLink) {
-			adminLink.addEventListener('click', e => {
-				e.preventDefault()
-				window.location.href = '/admin.html'
-			})
-		}
+		// Смена статуса в модалке
+		document.getElementById('statusSelect').addEventListener('change', e => {
+			this.updateApplicationStatus(e.target.value)
+		})
 	}
 
 	async loadApplications() {
 		const container = document.getElementById('applicationsContainer')
 		container.innerHTML =
 			'<div class="loading"><div class="spinner"></div>Загрузка...</div>'
+
 		try {
 			const params = new URLSearchParams({
 				page: this.pagination.page,
@@ -129,26 +132,23 @@ class StudentDashboard {
 			if (this.search) params.append('search', this.search)
 			if (this.statusId) params.append('status_id', this.statusId)
 
-			const resp = await authedFetch(
-				`${API.endpoints.myApplications}?${params.toString()}`
-			)
+			const resp = await authedFetch(`/application/list?${params.toString()}`)
 			const data = await resp.json()
 
 			this.applications = data.applications || []
 			this.pagination = data.pagination || this.pagination
 
-			const countEl = document.getElementById('applicationsCount')
-			if (countEl) {
-				const total = this.pagination.total || this.applications.length
-				countEl.textContent = `${total} заявок`
-			}
-
 			this.populateStatusFilter()
 			this.renderApplications()
 			this.updatePaginationUI()
+
+			document.getElementById('emptyState').style.display = this.applications
+				.length
+				? 'none'
+				: 'block'
 		} catch (error) {
 			showToast('Ошибка загрузки заявок', 'error')
-			document.getElementById('applicationsContainer').innerHTML =
+			container.innerHTML =
 				'<div style="padding:2rem;color:#999;text-align:center">Ошибка загрузки заявок</div>'
 		}
 	}
@@ -156,55 +156,35 @@ class StudentDashboard {
 	populateStatusFilter() {
 		const filter = document.getElementById('statusFilter')
 		const current = this.statusId
-
-		if (this.statusOptions) {
-			filter.innerHTML = this.statusOptions
-			filter.value = current
-			return
-		}
-
 		filter.innerHTML = '<option value="">Все статусы</option>'
 
-		const usedIds = new Set()
-
-		this.applications.forEach(app => {
-			if (!app.status_id || !app.status) return
-			if (usedIds.has(app.status_id)) return
-			usedIds.add(app.status_id)
-
+		this.statuses.forEach(status => {
 			const opt = document.createElement('option')
-			opt.value = app.status_id
-			opt.textContent = app.status
+			opt.value = status.id_status
+			opt.textContent = `${status.name} (${status.count})`
 			filter.appendChild(opt)
 		})
-
-		// закэшировать разметку
-		this.statusOptions = filter.innerHTML
 		filter.value = current
 	}
 
 	renderApplications() {
 		const container = document.getElementById('applicationsContainer')
 		if (!this.applications.length) {
-			container.innerHTML =
-				'<div style="grid-column:1/-1;text-align:center;padding:4rem;color:#6b7280"><i class="bi bi-inbox" style="font-size:3rem;opacity:0.5"></i><h3>Нет заявок</h3><p>Создайте первую заявку</p></div>'
+			container.innerHTML = ''
+			document.getElementById('emptyState').style.display = 'block'
 			return
 		}
 
-		let apps = [...this.applications]
+		document.getElementById('emptyState').style.display = 'none'
 
-		if (this.sort === 'date_asc') {
-			apps.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-		} else {
-			apps.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-		}
-
-		container.innerHTML = apps.map(a => this.createApplicationCard(a)).join('')
+		container.innerHTML = this.applications
+			.map(a => this.createApplicationCard(a))
+			.join('')
 
 		container.querySelectorAll('.applicationCard').forEach(card => {
 			card.addEventListener('click', () => {
 				const id = Number(card.dataset.appId)
-				const app = apps.find(x => Number(x.id_application) === id)
+				const app = this.applications.find(x => Number(x.id_application) === id)
 				if (app) this.openApplicationModal(app)
 			})
 		})
@@ -213,21 +193,23 @@ class StudentDashboard {
 	createApplicationCard(app) {
 		const created = new Date(app.created_at).toLocaleDateString('ru-RU')
 		const place = `${app.floor ?? ''} этаж, ${app.room ?? ''} комната`.trim()
+		const user = app.user_fio || app.user_login || '—'
 		return `
-        <div class="applicationCard" data-app-id="${app.id_application}">
-            <div class="cardHeader">
-                <span class="cardNumber">#${app.id_application}</span>
-          		<span style="font-size:0.78rem;color:#9ca3af">${created}</span>
-            </div>
-            <div class="cardPlace">${place}</div>
-            <div class="cardMeta">
-                <span class="statusBadge status-${app.status_id || 1}">${
+            <div class="applicationCard" data-app-id="${app.id_application}">
+                <div class="cardHeader">
+                    <span class="cardNumber">#${app.id_application}</span>
+                    <span style="font-size:0.78rem;color:#9ca3af">${created}</span>
+                </div>
+                <div class="cardPlace">${place}</div>
+                <div class="cardMeta">
+                    <span class="statusBadge status-${app.status_id || 1}">${
 			app.status || ''
 		}</span>
-                <span class="badge">${app.priority}</span>
+                    <span class="badge">${app.priority}</span>
+                    <small style="color:#9ca3af">${user}</small>
+                </div>
             </div>
-        </div>
-    `
+        `
 	}
 
 	updatePaginationUI() {
@@ -235,9 +217,8 @@ class StudentDashboard {
 		const prev = document.getElementById('prevPageBtn')
 		const next = document.getElementById('nextPageBtn')
 		const { page, pages, total } = this.pagination
-		info.textContent = `Страница ${page} из ${
-			pages || 1
-		} · всего ${total} заявок`
+
+		info.textContent = `Страница ${page} из ${pages || 1} · ${total} заявок`
 		prev.disabled = page <= 1
 		next.disabled = page >= (pages || 1)
 	}
@@ -246,22 +227,63 @@ class StudentDashboard {
 		document.getElementById(
 			'modalAppNumber'
 		).textContent = `#${app.id_application}`
-		document.getElementById('modalStatus').textContent = app.status
-		document.getElementById('modalStatus').className = `statusBadge status-${
-			app.status_id || 1
-		}`
-		document.getElementById(
-			'modalPlace'
-		).textContent = `${app.floor} этаж, ${app.section}, ${app.room}`
+		document.getElementById('modalPlace').textContent = `${
+			app.floor ?? ''
+		} этаж, ${app.section ?? ''}, ${app.room ?? ''}`.trim()
 		document.getElementById('modalCreatedAt').textContent = new Date(
 			app.created_at
 		).toLocaleString('ru-RU')
-		document.getElementById('modalDefectType').textContent = app.defect_type
-		document.getElementById('modalPriority').textContent = app.priority
+		document.getElementById('modalUser').textContent =
+			app.user_fio || app.user_login || '—'
+		document.getElementById('modalDefectType').textContent =
+			app.defect_type || '—'
+		document.getElementById('modalPriority').textContent = app.priority || '—'
 		document.getElementById('modalDescription').textContent =
 			app.description || 'Описание отсутствует'
+
+		// Заполняем select статусов
+		const statusSelect = document.getElementById('statusSelect')
+		statusSelect.innerHTML = this.statuses
+			.map(
+				s =>
+					`<option value="${s.id_status}" ${
+						s.id_status == app.status_id ? 'selected' : ''
+					}>${s.name}</option>`
+			)
+			.join('')
+
 		this.renderPhotosSlider(app)
 		document.getElementById('applicationModal').style.display = 'flex'
+	}
+
+	async updateApplicationStatus(newStatusId) {
+		const appNumberEl = document.getElementById('modalAppNumber')
+		const appNumber = appNumberEl.textContent.match(/#(\d+)/)?.[1]
+		if (!appNumber) return
+
+		try {
+			const resp = await fetch('api/application/admin/status', {
+				method: 'PUT',
+				headers: {
+					Authorization: `Bearer ${getToken()}`,
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					application_id: parseInt(appNumber),
+					status_id: parseInt(newStatusId),
+				}),
+			})
+
+			if (!resp.ok) throw new Error('Ошибка обновления')
+
+			showToast('Статус обновлён', 'success')
+			this.closeModal()
+			this.loadApplications()
+			this.loadStats()
+		} catch (error) {
+			showToast('Ошибка смены статуса', 'error')
+			console.error('Status update error:', error)
+		}
 	}
 
 	renderPhotosSlider(app) {
@@ -315,22 +337,23 @@ class StudentDashboard {
 			slides.forEach((slide, i) =>
 				slide.classList.toggle('active', i === index)
 			)
-			document
+			root
 				.querySelectorAll('.sliderDot')
 				.forEach((dot, i) => dot.classList.toggle('active', i === index))
 		}
 
-		prevBtn.addEventListener('click', () => {
-			current = (current - 1 + slides.length) % slides.length
-			showSlide(current)
-		})
+		if (prevBtn)
+			prevBtn.addEventListener('click', () => {
+				current = (current - 1 + slides.length) % slides.length
+				showSlide(current)
+			})
 
-		nextBtn.addEventListener('click', () => {
-			current = (current + 1) % slides.length
-			showSlide(current)
-		})
+		if (nextBtn)
+			nextBtn.addEventListener('click', () => {
+				current = (current + 1) % slides.length
+				showSlide(current)
+			})
 
-		// Доты
 		Array.from(slides).forEach((_, index) => {
 			const dot = document.createElement('div')
 			dot.className = `sliderDot ${index === 0 ? 'active' : ''}`
@@ -342,19 +365,6 @@ class StudentDashboard {
 	closeModal() {
 		document.getElementById('applicationModal').style.display = 'none'
 	}
-
-	updatePagination(totalPages) {
-		// Реализация пагинации (добавить в HTML)
-		this.currentPage = Math.min(this.currentPage, totalPages || 1)
-	}
-
-	switchView(view) {
-		document
-			.querySelectorAll('.navItem')
-			.forEach(item => item.classList.remove('active'))
-		document.querySelector(`[data-view="${view}"]`).classList.add('active')
-		// Логика переключения views
-	}
 }
 
 function debounce(fn, wait) {
@@ -365,13 +375,9 @@ function debounce(fn, wait) {
 	}
 }
 
-function logout() {
-	clearAuth()
-	window.location.href = '/login.html'
-}
-
 function showToast(message, type = 'error') {
 	const container = document.getElementById('toastContainer')
+	if (!container) return
 	const el = document.createElement('div')
 	el.className = `toast ${type}`
 	el.textContent = message
@@ -383,4 +389,4 @@ function showToast(message, type = 'error') {
 	}, 4000)
 }
 
-document.addEventListener('DOMContentLoaded', () => new StudentDashboard())
+document.addEventListener('DOMContentLoaded', () => new AdminDashboard())

@@ -22,21 +22,43 @@ class ApplicationController extends BaseController
         }
 
         $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-        $limit = 20;
+        $limit = isset($_GET['limit']) ? min(50, max(1, (int)$_GET['limit'])) : 10;
         $offset = ($page - 1) * $limit;
 
-        $result = $this->applicationModel->getAll($limit, $offset);
+        $status_id = isset($_GET['status_id']) && $_GET['status_id'] !== ''
+            ? (int)$_GET['status_id']
+            : null;
+
+        $search = isset($_GET['search']) ? trim((string)$_GET['search']) : null;
+
+        $applications = $this->applicationModel->getAll($limit, $offset, $status_id, $search);
         $total = $this->applicationModel->getApplicationsCount();
 
         $this->sendSuccess([
-            'applications' => $result,
+            'applications' => $applications,
             'pagination' => [
-                'page' => $page,
-                'limit' => $limit,
-                'total' => $total,
-                'pages' => ceil($total / $limit),
-                'offset' => $offset
+                'page'   => $page,
+                'limit'  => $limit,
+                'total'  => $total,
+                'pages'  => (int)ceil($total / $limit),
+                'offset' => $offset,
+                'status_filter' => $status_id,
+                'search' => $search
             ]
+        ]);
+    }
+
+    public function getAdminStats()
+    {
+        if (!AuthMiddleware::isAdmin()) {
+            $this->sendForbidden('Только для админов');
+            return;
+        }
+
+        $stats = $this->applicationModel->getAdminStats();
+
+        $this->sendSuccess([
+            'stats' => $stats
         ]);
     }
 
@@ -48,23 +70,38 @@ class ApplicationController extends BaseController
             return;
         }
 
-        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-        $limit = 20;
+        $page  = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $limit = isset($_GET['limit']) ? min(50, max(1, (int)$_GET['limit'])) : 20;
         $offset = ($page - 1) * $limit;
 
-        $result = $this->applicationModel->getByUser($user_id, $limit, $offset);
+        $search = isset($_GET['search']) ? trim((string)$_GET['search']) : null;
+        $status_id = isset($_GET['status_id']) && $_GET['status_id'] !== ''
+            ? (int)$_GET['status_id']
+            : null;
 
-        $total = $this->applicationModel->getUserApplicationsCount($user_id);
+        $applications = $this->applicationModel->getByUser(
+            (int)$user_id,
+            $limit,
+            $offset,
+            $search,
+            $status_id
+        );
+
+        $total = $this->applicationModel->getUserApplicationsCount(
+            (int)$user_id,
+            $search,
+            $status_id
+        );
 
         $this->sendSuccess([
-            'applications' => $result,
+            'applications' => $applications,
             'pagination' => [
-                'page' => $page,
-                'limit' => $limit,
-                'total' => $total,
-                'pages' => ceil($total / $limit),
-                'offset' => $offset
-            ]
+                'page'   => $page,
+                'limit'  => $limit,
+                'total'  => $total,
+                'pages'  => (int)ceil($total / $limit),
+                'offset' => $offset,
+            ],
         ]);
     }
 

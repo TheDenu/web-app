@@ -7,15 +7,18 @@
 			return
 		}
 
-		const resp = await authedFetch(API.BASE_URL + API.endpoints.userMe)
-		if (resp.ok) {
-			window.location.href = '/dashboard.html'
+		const resp = await authedFetch(API.endpoints.userMe)
+		const user = await resp.json()
+
+		if (user.role === 'admin') {
+			window.location.href = '/admin.html'
+			return
 		} else {
-			clearAuth()
-			window.location.href = '/login.html'
+			window.location.href = '/dashboard.html'
+			return
 		}
 	} catch (error) {
-		console.error('Auth check failed:', error)
+		clearAuth()
 		window.location.href = '/login.html'
 	}
 })()
