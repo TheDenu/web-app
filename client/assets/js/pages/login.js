@@ -42,7 +42,7 @@
 
 	function validateForm() {
 		const errors = []
-
+/*
 		const login = usernameInput.value.trim()
 		if (login.length < 3) {
 			errors.push('Логин должен содержать минимум 3 символа')
@@ -57,7 +57,7 @@
 			passwordInput.classList.add('error')
 		} else {
 			clearFieldError(passwordInput)
-		}
+		}*/
 
 		if (errors.length > 0) {
 			showToast(errors.join(' | '), 'error')

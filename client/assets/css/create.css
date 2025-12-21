@@ -205,8 +205,6 @@
 	color: var(--color-accent);
 	text-decoration: none;
 	font-weight: 500;
-	margin-bottom: 1rem;
-	padding: 0.5rem 0;
 	transition: var(--transition);
 }
 
