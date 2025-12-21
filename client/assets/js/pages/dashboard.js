@@ -115,6 +115,13 @@ class StudentDashboard {
 				window.location.href = '/admin.html'
 			})
 		}
+		const createLink = document.querySelector('.createLink')
+		if (createLink) {
+			createLink.addEventListener('click', e => {
+				e.preventDefault()
+				window.location.href = '/create.html'
+			})
+		}
 	}
 
 	async loadApplications() {

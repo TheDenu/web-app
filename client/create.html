@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Создать заявку</title>
+		<link rel="stylesheet" href="/assets/css/common.css" />
+		<link rel="stylesheet" href="/assets/css/create.css" />
+	</head>
+	<body>
+		<div class="container">
+			<a href="/" class="back-link">Назад</a>
+			<div class="card">
+				<h1>📋 Создать заявку</h1>
+				<form id="applicationForm" novalidate>
+					<div class="formGrid">
+						<div class="field-group formGroup">
+							<label class="field-label required" for="floorSelect">Этаж</label>
+							<select
+								id="floorSelect"
+								class="formControl selectControl"
+								required
+								disabled
+							>
+								<option value="">Загрузка...</option>
+							</select>
+							<div class="errorMessageInline"></div>
+						</div>
+
+						<div class="field-group formGroup">
+							<label class="field-label required" for="roomSelect"
+								>Комната</label
+							>
+							<select
+								id="roomSelect"
+								class="formControl selectControl"
+								required
+								disabled
+							>
+								<option value="">Сначала выберите этаж</option>
+							</select>
+							<div class="errorMessageInline"></div>
+						</div>
+					</div>
+
+					<div class="field-group formGroup">
+						<label class="field-label" for="sectionSelect">Секция</label>
+						<select
+							id="sectionSelect"
+							class="formControl selectControl"
+							disabled
+						>
+							<option value="">Сначала выберите комнату</option>
+						</select>
+						<div class="errorMessageInline"></div>
+					</div>
+					<input type="hidden" id="placeId" name="place_id" required />
+
+					<div class="field-group formGroup">
+						<label class="field-label required" for="defectType"
+							>Тип дефекта</label
+						>
+						<select id="defectType" class="formControl selectControl" required>
+							<option value="">Выберите тип дефекта</option>
+							<option value="1">Сломан кран</option>
+							<option value="2">Не работает розетка</option>
+							<option value="3">Протекает батарея</option>
+							<option value="4">Не работает свет</option>
+							<option value="5">Другое</option>
+						</select>
+						<div class="errorMessageInline"></div>
+					</div>
+
+					<div class="field-group formGroup">
+						<label class="field-label required" for="priority">Приоритет</label>
+						<select id="priority" class="formControl selectControl" required>
+							<option value="">Выберите приоритет</option>
+							<option value="1">Низкий</option>
+							<option value="2">Средний</option>
+							<option value="3">Высокий</option>
+						</select>
+						<div class="errorMessageInline"></div>
+					</div>
+
+					<div class="field-group formGroup formGrid-full">
+						<label class="field-label required" for="description"
+							>Описание проблемы</label
+						>
+						<textarea
+							id="description"
+							class="formControl"
+							rows="4"
+							required
+							placeholder="Подробно опишите проблему..."
+							maxlength="1000"
+						></textarea>
+						<div class="errorMessageInline"></div>
+					</div>
+					<div class="field-group formGroup formGrid-full">
+						<label class="field-label" for="photos">Фотографии</label>
+						<div class="fileInputWrapper">
+							<input
+								type="file"
+								id="photos"
+								class="fileInput"
+								accept="image/*"
+								multiple
+							/>
+							<label for="photos" class="fileInputLabel">
+								📷 Добавить фото
+							</label>
+							<div class="filePreview" id="filePreview"></div>
+						</div>
+					</div>
+
+					<button type="submit" class="btn btnPrimary" id="submitBtn">
+						Создать заявку
+					</button>
+
+					<div id="successMessage" class="successMessage" style="display: none">
+						✅ Заявка успешно создана!
+					</div>
+				</form>
+
+				<div id="loadingSpinner" class="loading" style="display: none">
+					<div class="spinner"></div>
+					Создание заявки...
+				</div>
+			</div>
+		</div>
+		<script src="/assets/js/auth.js"></script>
+		<script src="/assets/js/api.js"></script>
+		<script src="/assets/js/pages/create.js"></script>
+	</body>
+</html>
