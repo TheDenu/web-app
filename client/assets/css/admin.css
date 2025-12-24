@@ -1,8 +1,8 @@
 .statsRow {
 	display: flex;
+	flex-wrap: wrap;
 	gap: 0.5rem;
 	margin-top: 0.5rem;
-	flex-wrap: wrap;
 	align-items: center;
 }
 
@@ -11,112 +11,27 @@
 	flex-direction: column;
 	align-items: center;
 	gap: 0.15rem;
-	padding: 0.4rem 0.7rem; /* было 0.75rem 1rem */
+	padding: 0.4rem 0.7rem;
 	border-radius: 10px;
-	font-size: 0.78rem; /* было 0.85rem */
+	font-size: 0.78rem;
 	font-weight: 600;
-	min-width: 60px; /* было 70px */
-	cursor: pointer;
+	min-width: 60px;
 	transition: background-color 0.15s ease, box-shadow 0.15s ease;
-	border: 1px solid transparent; /* было 2px */
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06); /* меньше тень */
+	border: 1px solid transparent;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .statLabel {
-	font-size: 0.7rem; /* чуть меньше */
+	font-size: 0.7rem;
 	opacity: 0.85;
 	letter-spacing: 0.01em;
 	font-weight: 500;
 }
 
 .statCount {
-	font-size: 1.05rem; /* было 1.2rem */
+	font-size: 1.05rem;
 	font-weight: 700;
 	line-height: 1.1;
 	min-width: 1.4em;
 	text-align: center;
-}
-
-/* дальше твои же цвета, можно оставить как есть */
-.statBadge.status-1 {
-	background: #fdf4dc;
-	color: #b45309;
-	border-color: #fcd34d;
-}
-
-.statBadge.status-1:hover {
-	background: #fceadc;
-	box-shadow: 0 2px 8px rgba(251, 191, 36, 0.18);
-}
-
-.statBadge.status-2 {
-	background: #eff6ff;
-	color: #1e40af;
-	border-color: #93c5fd;
-}
-
-.statBadge.status-2:hover {
-	background: #e0f2fe;
-	box-shadow: 0 2px 8px rgba(59, 130, 246, 0.18);
-}
-
-.statBadge.status-3 {
-	background: #f0fdf4;
-	color: #065f46;
-	border-color: #86efac;
-}
-
-.statBadge.status-3:hover {
-	background: #ecfdf5;
-	box-shadow: 0 2px 8px rgba(34, 197, 94, 0.18);
-}
-
-.statBadge.status-4 {
-	background: #f7fee7;
-	color: #047857;
-	border-color: #6ee7b7;
-}
-
-.statBadge.status-4:hover {
-	background: #ecfdf5;
-	box-shadow: 0 2px 8px rgba(22, 163, 74, 0.18);
-}
-
-.statBadge.status-5 {
-	background: #fef7f6;
-	color: #7f1d1d;
-	border-color: #fca5a5;
-}
-
-.statBadge.status-5:hover {
-	background: #fef2f2;
-	box-shadow: 0 2px 8px rgba(239, 68, 68, 0.18);
-}
-
-.statBadge.active {
-	border-color: #3b82f6;
-	box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.15);
-	background: rgba(59, 130, 246, 0.06) !important;
-}
-.resetFiltersBtn {
-	margin-left: 0.5rem;
-	padding: 0.35rem 0.8rem;
-	font-size: 0.8rem;
-	border-radius: 999px;
-	border: 1px solid #d1d5db;
-	background: #f9fafb;
-	color: #4b5563;
-	cursor: pointer;
-	transition: background-color 0.15s ease, color 0.15s ease,
-		border-color 0.15s ease;
-}
-
-.resetFiltersBtn:hover {
-	background: #e5e7eb;
-	border-color: #9ca3af;
-	color: #111827;
-}
-
-.resetFiltersBtn:active {
-	background: #d1d5db;
 }

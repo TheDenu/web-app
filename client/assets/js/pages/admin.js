@@ -117,6 +117,43 @@ class AdminDashboard {
 		document.getElementById('statusSelect').addEventListener('change', e => {
 			this.updateApplicationStatus(e.target.value)
 		})
+
+		// Мобильное меню
+		const mobileMenuBtn = document.getElementById('mobileMenuBtn')
+		const sidebar = document.querySelector('.sidebar')
+		const overlay = document.createElement('div')
+		overlay.className = 'mobileMenuOverlay'
+		document.body.appendChild(overlay)
+
+		const toggleMobileMenu = () => {
+			sidebar.classList.toggle('open')
+			overlay.classList.toggle('show')
+		}
+
+		if (mobileMenuBtn) {
+			mobileMenuBtn.addEventListener('click', toggleMobileMenu)
+		}
+
+		overlay.addEventListener('click', toggleMobileMenu)
+
+		// Закрытие меню при клике на navItem
+		document.querySelectorAll('.navItem').forEach(item => {
+			item.addEventListener('click', e => {
+				// ... существующий код навигации ...
+				toggleMobileMenu() // Закрыть меню после клика
+			})
+		})
+
+		let resizeTimer
+		window.addEventListener('resize', () => {
+			clearTimeout(resizeTimer)
+			resizeTimer = setTimeout(() => {
+				if (window.innerWidth > 1024) {
+					sidebar.classList.remove('open')
+					overlay.classList.remove('show')
+				}
+			}, 250)
+		})
 	}
 
 	async loadApplications() {
